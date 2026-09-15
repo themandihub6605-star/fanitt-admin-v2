@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Point-Fix: body used to hardcode `text-white` and a fixed #0A0A0A
+     background with NO awareness of the light/dark toggle at all — so
+     switching themes visually did nothing at the body level, and in
+     light mode any text relying on inherited color (instead of an
+     explicit class) stayed invisible-white on a light background.
+     `.dark body` below is a plain CSS selector keyed off the `.dark`
+     class ThemeContext toggles on <html> — reliable regardless of any
+     Tailwind `dark:` utility-class quirk, since it's the same mechanism
+     Tailwind's own dark: variant uses under the hood. */
+  body {
+    @apply font-body text-gray-900 antialiased dark:text-white;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.06), transparent 28%),
+      radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.05), transparent 30%),
+      #F5F6FB;
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255, 90, 31, 0.10), transparent 28%),
+      radial-gradient(circle at 85% 15%, rgba(236, 42, 120, 0.08), transparent 30%),
+      #0A0A0A;
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-gray-900 dark:text-white;
+  }
+  ::selection {
+    @apply bg-indigo-500/25 text-gray-900 dark:bg-orange-500/40 dark:text-white;
+  }
+  :focus-visible {
+    outline: 2px solid #6366F1;
+    outline-offset: 3px;
+  }
+  .dark :focus-visible {
+    outline: 2px solid #FF5A1F;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-black/5 bg-black/[0.03] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06];
+  }
+  .glass-dark {
+    @apply bg-black/30 backdrop-blur-xl border border-white/10;
+  }
+  .badge-dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full bg-indigo-500 dark:bg-orange-500;
+  }
+  .brand-gradient-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+  .brand-gradient-bg {
+    background: linear-gradient(135deg, #FF6A1F 0%, #F9436E 60%, #EC2A78 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Skeleton shimmer — Point-Fix: was rgba(255,255,255,...) only, which is
+   invisible against a light background. Light-mode version added; dark
+   mode keeps the original. */
+.skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 37%, rgba(0,0,0,0.04) 63%);
+  background-size: 400px 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 400px 100%;
+}
