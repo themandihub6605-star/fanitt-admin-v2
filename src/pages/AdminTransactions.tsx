@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle, Receipt, ChevronLeft, ChevronRight, CalendarDays, X, ArrowRight } from 'lucide-react';
 import { adminApi, type AdminTransaction } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
@@ -89,9 +90,24 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: AdminTr
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <Card className="relative z-10 w-full max-w-md">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="w-full">
         <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-white/10">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">Transaction Detail</p>
@@ -150,8 +166,9 @@ function TransactionDetailModal({ transaction, onClose }: { transaction: AdminTr
           />
           <DetailRow label="Transaction ID" value={transaction._id} mono />
         </div>
-      </Card>
-    </div>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -200,6 +217,7 @@ export default function AdminTransactions() {
           {DATE_PRESETS.map((p) => (
             <Tab
               key={p.value}
+              groupId="date-preset"
               active={datePreset === p.value}
               onClick={() => {
                 setDatePreset(p.value);
@@ -274,9 +292,12 @@ export default function AdminTransactions() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                  {transactions.map((t) => (
-                    <tr
+                  {transactions.map((t, i) => (
+                    <motion.tr
                       key={t._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.25, delay: Math.min(i, 20) * 0.02 }}
                       onClick={() => setSelected(t)}
                       className="cursor-pointer transition-colors hover:bg-orange-50/60 dark:hover:bg-white/[0.03]"
                     >
@@ -290,7 +311,7 @@ export default function AdminTransactions() {
                         {new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">{formatRupees(t.amount)}</td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -313,7 +334,7 @@ export default function AdminTransactions() {
         </>
       )}
 
-      {selected && <TransactionDetailModal transaction={selected} onClose={() => setSelected(null)} />}
+      <AnimatePresence>{selected && <TransactionDetailModal transaction={selected} onClose={() => setSelected(null)} />}</AnimatePresence>
     </div>
   );
 }

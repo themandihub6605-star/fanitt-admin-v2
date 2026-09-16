@@ -13,9 +13,19 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface AdminPost {
+  _id: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  caption: string;
+  likeCount: number;
+  createdAt: string;
+}
+
 export interface UserDetail {
   user: AdminUser & { phone?: string; walletBalance?: number; referralCode?: string; lastLoginAt?: string };
   roleProfile: Record<string, unknown> | null;
+  posts: AdminPost[];
   transactions: AdminTransaction[];
   reviews: { _id: string; rating: number; comment: string; createdAt: string; fromUser?: { name: string } }[];
   referredCount: number;
@@ -236,9 +246,7 @@ export const adminApi = {
   refundEscrow: (campaignId: string) =>
     apiClient.post(`/admin/escrow/${campaignId}/refund`).then((r) => r.data.data),
 
-  listAllTransactions: (
-    params: { type?: string; status?: string; startDate?: string; endDate?: string; page?: number; limit?: number } = {}
-  ) =>
+  listAllTransactions: (params: { type?: string; status?: string; page?: number; limit?: number } = {}) =>
     apiClient
       .get<ApiEnvelope<{ transactions: AdminTransaction[]; total: number; page: number; pages: number }>>('/admin/transactions', { params })
       .then((r) => r.data.data),

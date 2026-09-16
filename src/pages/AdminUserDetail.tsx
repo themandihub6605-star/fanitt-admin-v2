@@ -13,9 +13,12 @@ import {
   FileText,
   ExternalLink,
   ImageOff,
+  Heart,
+  Play,
+  Images,
 } from 'lucide-react';
 import { adminApi, type UserDetail } from '@/services/adminApi';
-import { getApiErrorMessage } from '@/services/apiClient';
+import { getApiErrorMessage, getUploadUrl } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
 import { Card, Badge, Button, StatCard, EmptyState } from '@/components/AdminUI';
 
@@ -238,7 +241,7 @@ export default function AdminUserDetail() {
     );
   }
 
-  const { user, roleProfile, transactions, reviews, referredCount } = data;
+  const { user, roleProfile, posts, transactions, reviews, referredCount } = data;
 
   // Split the role profile into simple fields (rendered as a compact
   // two-column key/value grid, same as before) vs structured fields
@@ -324,7 +327,7 @@ export default function AdminUserDetail() {
             </div>
           )}
 
-          {/* Everything structured — posts, portfolio images, KYC/verification
+          {/* Everything structured — portfolio images, KYC/verification
               documents, social links, and any other array/object field the
               backend sends — rendered here instead of being silently dropped. */}
           {structuredEntries.length > 0 && (
@@ -337,10 +340,52 @@ export default function AdminUserDetail() {
         </Card>
       )}
 
-      {roleProfile && structuredEntries.length === 0 && (
+      {roleProfile && structuredEntries.length === 0 && posts.length === 0 && (
         <Card className="mt-4 flex items-center gap-3 p-4 text-sm text-gray-400 dark:text-white/40">
           <ImageOff size={16} className="shrink-0" />
           This user's role profile has no posts, portfolio media, or uploaded documents on it yet.
+        </Card>
+      )}
+
+      {/* NEW — Bug fix: creator's Community-feed posts weren't fetched or
+          shown anywhere in the admin panel at all. Only rendered for
+          creators (the only role that has posts), and only once they've
+          actually posted something. */}
+      {user.role === 'creator' && posts.length > 0 && (
+        <Card className="mt-4 p-5">
+          <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">
+            <Images size={13} /> Posts <span className="text-gray-300 dark:text-white/20">({posts.length})</span>
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {posts.map((p) => (
+              <a
+                key={p._id}
+                href={getUploadUrl(p.mediaUrl)}
+                target="_blank"
+                rel="noreferrer"
+                className="group overflow-hidden rounded-xl border border-gray-100 dark:border-white/10"
+              >
+                <div className="relative">
+                  {p.mediaType === 'video' ? (
+                    <video src={getUploadUrl(p.mediaUrl)} className="h-28 w-full object-cover" muted />
+                  ) : (
+                    <img src={getUploadUrl(p.mediaUrl)} alt={p.caption || 'Post'} className="h-28 w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                  )}
+                  {p.mediaType === 'video' && (
+                    <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white">
+                      <Play size={10} fill="currentColor" />
+                    </span>
+                  )}
+                </div>
+                <div className="p-2">
+                  {p.caption && <p className="truncate text-xs text-gray-600 dark:text-white/60">{p.caption}</p>}
+                  <p className="mt-0.5 flex items-center gap-1 text-[10px] text-gray-400 dark:text-white/40">
+                    <Heart size={10} /> {p.likeCount} · {new Date(p.createdAt).toLocaleDateString('en-IN')}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
         </Card>
       )}
 

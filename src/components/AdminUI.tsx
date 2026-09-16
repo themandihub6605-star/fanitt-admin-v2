@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, animate } from 'framer-motion';
 import { cn } from '@/utils/cn';
 
 /** Shared design-kit for the admin panel — Fanitt brand accent
@@ -131,7 +132,13 @@ export function SpotlightCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[22px] bg-brand-gradient p-5 text-white shadow-[0_10px_30px_rgba(236,42,120,0.28)]">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+      className="relative overflow-hidden rounded-[22px] bg-brand-gradient p-5 text-white shadow-[0_10px_30px_rgba(236,42,120,0.28)]"
+    >
       <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
       <div className="pointer-events-none absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/10" />
       <div className="relative flex items-center justify-between">
@@ -142,7 +149,7 @@ export function SpotlightCard({
       <p className="relative mt-4 text-2xl font-extrabold">{value}</p>
       <p className="relative mt-0.5 text-xs font-semibold text-white/80">{label}</p>
       {sublabel && <p className="relative mt-3 border-t border-white/20 pt-2 text-[11px] font-medium text-white/75">{sublabel}</p>}
-    </div>
+    </motion.div>
   );
 }
 
@@ -162,7 +169,13 @@ export function BalanceCard({
   footRight: { label: string; value: string };
 }) {
   return (
-    <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-[22px] bg-brand-gradient p-6 text-white shadow-[0_10px_30px_rgba(236,42,120,0.28)]">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+      className="relative flex h-full flex-col justify-between overflow-hidden rounded-[22px] bg-brand-gradient p-6 text-white shadow-[0_10px_30px_rgba(236,42,120,0.28)]"
+    >
       <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-full bg-gradient-to-t from-black/10 to-transparent" />
       <div className="relative flex items-start justify-between">
@@ -180,19 +193,38 @@ export function BalanceCard({
           <p className="mt-0.5 font-bold">{footRight.value}</p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 /** SVG ring gauge for a single percentage — used for things like
- * "commission held vs revenue". Real percentage in, nothing invented. */
+ * "commission held vs revenue". Real percentage in, nothing invented.
+ * The number counts up from 0 on mount/update instead of just
+ * appearing, and the ring itself animates in with a scale/fade. */
 export function RadialProgress({ percent, size = 128, stroke = 12, label }: { percent: number; size?: number; stroke?: number; label?: string }) {
   const clamped = Math.max(0, Math.min(100, percent));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (clamped / 100) * c;
+
+  const [displayValue, setDisplayValue] = useState(0);
+  useEffect(() => {
+    const controls = animate(0, clamped, {
+      duration: 1,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplayValue(v),
+    });
+    return () => controls.stop();
+  }, [clamped]);
+
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} className="stroke-gray-100 dark:stroke-white/10" fill="none" />
         <defs>
@@ -215,10 +247,10 @@ export function RadialProgress({ percent, size = 128, stroke = 12, label }: { pe
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-xl font-extrabold text-gray-900 dark:text-white">{clamped.toFixed(0)}%</span>
+        <span className="text-xl font-extrabold text-gray-900 dark:text-white">{displayValue.toFixed(0)}%</span>
         {label && <span className="mt-0.5 text-[10px] font-semibold text-gray-400 dark:text-white/40">{label}</span>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -229,11 +261,15 @@ export function StatRow({
   label,
   value,
   accent = 'orange',
+  index = 0,
 }: {
   icon: LucideIcon;
   label: string;
   value: string | number;
   accent?: 'orange' | 'pink' | 'emerald' | 'amber' | 'rose' | 'sky';
+  /** Position within a list — staggers the mount animation. Omit for
+   * a standalone row. */
+  index?: number;
 }) {
   const accentClasses: Record<string, string> = {
     orange: 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400',
@@ -244,15 +280,24 @@ export function StatRow({
     sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400',
   };
   return (
-    <div className="flex items-center justify-between gap-3 py-2.5">
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index, 12) * 0.05, ease: 'easeOut' }}
+      className="flex items-center justify-between gap-3 py-2.5"
+    >
       <div className="flex min-w-0 items-center gap-3">
-        <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', accentClasses[accent])}>
+        <motion.span
+          whileHover={{ scale: 1.1, rotate: -4 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', accentClasses[accent])}
+        >
           <Icon size={16} />
-        </span>
+        </motion.span>
         <span className="truncate text-sm font-semibold text-gray-600 dark:text-white/70">{label}</span>
       </div>
       <span className="shrink-0 text-sm font-extrabold text-gray-900 dark:text-white">{value}</span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -270,9 +315,14 @@ const BADGE_TONES: Record<string, string> = {
 
 export function Badge({ children, tone = 'gray', className }: PropsWithChildren<{ tone?: keyof typeof BADGE_TONES; className?: string }>) {
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold', BADGE_TONES[tone], className)}>
+    <motion.span
+      initial={{ opacity: 0, scale: 0.7 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold', BADGE_TONES[tone], className)}
+    >
       {children}
-    </span>
+    </motion.span>
   );
 }
 
@@ -327,18 +377,24 @@ export function Tab({
   active,
   onClick,
   children,
-}: PropsWithChildren<{ active: boolean; onClick: () => void }>) {
+  groupId = 'default',
+}: PropsWithChildren<{ active: boolean; onClick: () => void; /** Scopes the sliding active-indicator's layoutId — set a unique value if a page renders more than one TabGroup at once. */ groupId?: string }>) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors sm:text-sm',
-        active
-          ? 'bg-white text-orange-700 shadow-sm dark:bg-orange-500/20 dark:text-orange-300'
-          : 'text-gray-500 hover:text-gray-800 dark:text-white/50 dark:hover:text-white/80'
+        'relative flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors sm:text-sm',
+        active ? 'text-orange-700 dark:text-orange-300' : 'text-gray-500 hover:text-gray-800 dark:text-white/50 dark:hover:text-white/80'
       )}
     >
-      {children}
+      {active && (
+        <motion.span
+          layoutId={`tab-pill-${groupId}`}
+          className="absolute inset-0 rounded-lg bg-white shadow-sm dark:bg-orange-500/20"
+          transition={{ type: 'spring', stiffness: 450, damping: 40 }}
+        />
+      )}
+      <span className="relative z-10 flex items-center gap-1.5">{children}</span>
     </button>
   );
 }

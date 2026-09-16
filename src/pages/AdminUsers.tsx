@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Loader2, AlertCircle, Search, Ban, RotateCcw, ChevronLeft, ChevronRight, Users2 } from 'lucide-react';
 import { adminApi, type AdminUser } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
@@ -122,8 +123,14 @@ export default function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                  {users.map((u) => (
-                    <tr key={u._id} className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                  {users.map((u, i) => (
+                    <motion.tr
+                      key={u._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.25, delay: Math.min(i, 20) * 0.02 }}
+                      className="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                    >
                       <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                         <Link to={`/users/${u._id}`} className="flex items-center gap-2.5">
                           {u.avatarUrl ? (
@@ -168,7 +175,7 @@ export default function AdminUsers() {
                           {u.isSuspended ? 'Reinstate' : 'Suspend'}
                         </Button>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
