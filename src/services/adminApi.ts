@@ -246,7 +246,7 @@ export const adminApi = {
   refundEscrow: (campaignId: string) =>
     apiClient.post(`/admin/escrow/${campaignId}/refund`).then((r) => r.data.data),
 
-  listAllTransactions: (params: { type?: string; status?: string; page?: number; limit?: number } = {}) =>
+   listAllTransactions: (params: { type?: string; status?: string; page?: number; limit?: number; startDate?: string; endDate?: string } = {}) =>
     apiClient
       .get<ApiEnvelope<{ transactions: AdminTransaction[]; total: number; page: number; pages: number }>>('/admin/transactions', { params })
       .then((r) => r.data.data),
