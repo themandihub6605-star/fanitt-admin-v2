@@ -147,9 +147,41 @@ export interface AdminMilestone {
   };
 }
 
+// NOTE for backend: the fields below marked optional are ones the signup
+// flow actually collects (see fanitt-web/src/pages/Signup.tsx) but that
+// GET /admin/verifications/pending may not currently be selecting/returning.
+// For the admin review UI to show them, the backend query for this endpoint
+// needs to .populate()/select() these fields on the Creator/Brand documents.
+// Also: `user._id` isn't currently returned here — it's needed so the "View
+// full profile" link can point at /users/:id (the existing user-detail page).
 export interface PendingVerifications {
-  pendingCreators: { _id: string; user: { name: string; email: string; avatarUrl?: string }; category?: { label: string }; bio?: string }[];
-  pendingBrands: { _id: string; user: { name: string; email: string; avatarUrl?: string }; companyName: string; industry?: string }[];
+  pendingCreators: {
+    _id: string;
+    user: { _id?: string; name: string; email: string; phone?: string; avatarUrl?: string };
+    category?: { label: string };
+    title?: string;
+    bio?: string;
+    skills?: string[];
+    languages?: string[];
+    responseTime?: string;
+    yearsOfExperience?: number;
+    portfolioLink?: string;
+    socials?: { instagram?: string; youtube?: string; behance?: string; website?: string };
+  }[];
+  pendingBrands: {
+    _id: string;
+    user: { _id?: string; name: string; email: string; phone?: string; avatarUrl?: string };
+    companyName: string;
+    tagline?: string;
+    about?: string;
+    industry?: string;
+    foundedYear?: number;
+    companySize?: string;
+    contactDesignation?: string;
+    whatWeOffer?: string | string[];
+    targetAudience?: string;
+    socials?: { instagram?: string; youtube?: string; linkedin?: string; website?: string };
+  }[];
 }
 
 export interface AdminSubscriptionPlan {
@@ -231,11 +263,16 @@ export const adminApi = {
   listPendingVerifications: () =>
     apiClient.get<ApiEnvelope<PendingVerifications>>('/admin/verifications/pending').then((r) => r.data.data),
 
-  verifyCreator: (id: string, decision: 'verified' | 'rejected') =>
-    apiClient.patch(`/admin/verifications/creator/${id}`, { decision }).then((r) => r.data.data),
+  // NOTE for backend: verifyAgency already accepts + stores rejectionReason
+  // (and presumably emails it) at PATCH /admin/agencies/:id/verify — these
+  // two need the exact same treatment mirrored onto their endpoints so
+  // creator/brand rejections carry a reason too. Sending the field now is
+  // harmless even before the backend supports it.
+  verifyCreator: (id: string, decision: 'verified' | 'rejected', rejectionReason?: string) =>
+    apiClient.patch(`/admin/verifications/creator/${id}`, { decision, rejectionReason }).then((r) => r.data.data),
 
-  verifyBrand: (id: string, decision: 'verified' | 'rejected') =>
-    apiClient.patch(`/admin/verifications/brand/${id}`, { decision }).then((r) => r.data.data),
+  verifyBrand: (id: string, decision: 'verified' | 'rejected', rejectionReason?: string) =>
+    apiClient.patch(`/admin/verifications/brand/${id}`, { decision, rejectionReason }).then((r) => r.data.data),
 
   listDisputedEscrows: () =>
     apiClient.get<ApiEnvelope<DisputedCampaign[]>>('/admin/disputes/escrow').then((r) => r.data.data),
