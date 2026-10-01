@@ -29,6 +29,10 @@ import {
   ChevronRight,
   Image as ImageIcon,
   Check,
+  UsersRound,
+  FileText,
+  Briefcase,
+  Store,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,10 +40,19 @@ import { useTheme } from '@/context/ThemeContext';
 import { useBackground, BACKGROUND_OPTIONS } from '@/context/BackgroundContext';
 import { cn } from '@/utils/cn';
 
+/** A nav item is active on its own page and on pages under it (e.g. /store/orders). */
+function isNavActive(href: string, pathname: string) {
+  return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+}
+
 const NAV_SECTIONS = [
   {
     label: 'Overview',
     items: [{ href: '/', label: 'Dashboard', icon: LayoutDashboard }],
+  },
+  {
+    label: 'Fanitt Store',
+    items: [{ href: '/store', label: 'Fanitt Store', icon: Store }],
   },
   {
     label: 'People',
@@ -64,7 +77,10 @@ const NAV_SECTIONS = [
   {
     label: 'Content',
     items: [
+      { href: '/campaigns', label: 'Campaigns', icon: Briefcase },
       { href: '/moderation', label: 'Content Moderation', icon: Flag },
+      { href: '/communities', label: 'Communities', icon: UsersRound },
+      { href: '/posts', label: 'Posts', icon: FileText },
       { href: '/categories', label: 'Categories', icon: Tag },
       { href: '/broadcast', label: 'Broadcast', icon: Megaphone },
     ],
@@ -208,7 +224,7 @@ function SidebarNav({ onNavigate, instanceId }: { onNavigate?: () => void; insta
     <nav className="flex-1 space-y-1 overflow-y-auto">
       {NAV_SECTIONS.map((section) => {
         const isOpen = openSections.has(section.label);
-        const hasActiveItem = section.items.some((item) => item.href === location.pathname);
+        const hasActiveItem = section.items.some((item) => isNavActive(item.href, location.pathname));
         return (
           <div key={section.label}>
             <button
@@ -233,7 +249,7 @@ function SidebarNav({ onNavigate, instanceId }: { onNavigate?: () => void; insta
                 >
                   <div className="space-y-0.5 pb-1 pt-0.5">
                     {section.items.map((item) => {
-                      const active = location.pathname === item.href;
+                      const active = isNavActive(item.href, location.pathname);
                       return (
                         <Link
                           key={item.href}
@@ -277,7 +293,7 @@ export function AdminLayout({ children }: PropsWithChildren) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const currentPage = ALL_NAV_ITEMS.find((item) => item.href === location.pathname);
+  const currentPage = ALL_NAV_ITEMS.find((item) => isNavActive(item.href, location.pathname));
 
   // Quick-jump search: typing a nav section's name (e.g. "withdrawals")
   // and hitting Enter routes straight there — real navigation, not a

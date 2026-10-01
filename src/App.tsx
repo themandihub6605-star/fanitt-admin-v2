@@ -27,6 +27,19 @@ import AdminAdmins from '@/pages/AdminAdmins';
 import AdminChangePassword from '@/pages/AdminChangePassword';
 import AdminSubscriptionPlans from '@/pages/AdminSubscriptionPlans';
 import AdminMilestones from '@/pages/AdminMilestones';
+import AdminCommunities from '@/pages/AdminCommunities';
+import AdminPosts from '@/pages/AdminPosts';
+import AdminCampaigns from '@/pages/AdminCampaigns';
+// Fanitt Store
+import StoreOverview from '@/FanittStore/pages/StoreOverview';
+import StoreStores from '@/FanittStore/pages/StoreStores';
+import StoreProducts from '@/FanittStore/pages/StoreProducts';
+import StoreOrders from '@/FanittStore/pages/StoreOrders';
+import StoreLives from '@/FanittStore/pages/StoreLives';
+import StoreCalls from '@/FanittStore/pages/StoreCalls';
+import StoreAffiliate from '@/FanittStore/pages/StoreAffiliate';
+import StoreFanbox from '@/FanittStore/pages/StoreFanbox';
+import StoreSettings from '@/FanittStore/pages/StoreSettings';
 
 function useAuthHydration() {
   const dispatch = useAppDispatch();
@@ -99,6 +112,19 @@ function AppRoutes() {
         <Route path="/change-password" element={<Shell><PageTransition><AdminChangePassword /></PageTransition></Shell>} />
         <Route path="/subscription-plans" element={<Shell><PageTransition><AdminSubscriptionPlans /></PageTransition></Shell>} />
         <Route path="/milestones" element={<Shell><PageTransition><AdminMilestones /></PageTransition></Shell>} />
+        <Route path="/communities" element={<Shell><PageTransition><AdminCommunities /></PageTransition></Shell>} />
+        <Route path="/posts" element={<Shell><PageTransition><AdminPosts /></PageTransition></Shell>} />
+        <Route path="/campaigns" element={<Shell><PageTransition><AdminCampaigns /></PageTransition></Shell>} />
+        {/* Fanitt Store */}
+        <Route path="/store" element={<Shell><PageTransition><StoreOverview /></PageTransition></Shell>} />
+        <Route path="/store/stores" element={<Shell><PageTransition><StoreStores /></PageTransition></Shell>} />
+        <Route path="/store/products" element={<Shell><PageTransition><StoreProducts /></PageTransition></Shell>} />
+        <Route path="/store/orders" element={<Shell><PageTransition><StoreOrders /></PageTransition></Shell>} />
+        <Route path="/store/lives" element={<Shell><PageTransition><StoreLives /></PageTransition></Shell>} />
+        <Route path="/store/calls" element={<Shell><PageTransition><StoreCalls /></PageTransition></Shell>} />
+        <Route path="/store/affiliate" element={<Shell><PageTransition><StoreAffiliate /></PageTransition></Shell>} />
+        <Route path="/store/fanbox" element={<Shell><PageTransition><StoreFanbox /></PageTransition></Shell>} />
+        <Route path="/store/settings" element={<Shell><PageTransition><StoreSettings /></PageTransition></Shell>} />
       </Routes>
     </AnimatePresence>
   );
