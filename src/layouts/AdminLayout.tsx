@@ -33,6 +33,9 @@ import {
   FileText,
   Briefcase,
   Store,
+  LayoutGrid,
+  Video,
+  Activity,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,7 +51,10 @@ function isNavActive(href: string, pathname: string) {
 const NAV_SECTIONS = [
   {
     label: 'Overview',
-    items: [{ href: '/', label: 'Dashboard', icon: LayoutDashboard }],
+    items: [
+      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/app-analytics', label: 'App Analytics', icon: Activity },
+    ],
   },
   {
     label: 'Fanitt Store',
@@ -77,6 +83,8 @@ const NAV_SECTIONS = [
   {
     label: 'Content',
     items: [
+      { href: '/home-layout', label: 'App Home Screen', icon: LayoutGrid },
+      { href: '/live-sessions', label: 'Live Sessions', icon: Video },
       { href: '/campaigns', label: 'Campaigns', icon: Briefcase },
       { href: '/moderation', label: 'Content Moderation', icon: Flag },
       { href: '/communities', label: 'Communities', icon: UsersRound },
