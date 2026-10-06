@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, ImagePlus, Loader2, Save, Smartphone } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Crown, ImagePlus, Loader2, Save, Smartphone } from 'lucide-react';
 import { Badge, Button, Card } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
@@ -95,12 +95,62 @@ export default function StoreSettings() {
         <Loading text="Loading settings…" />
       ) : (
         <div className="space-y-6">
+          <AccessCard settings={settings} onSaved={setSettings} />
           <FeesCard settings={settings} onSaved={setSettings} />
           <ToolCardsCard cards={settings.toolCards} onSaved={(toolCards) => setSettings({ ...settings, toolCards })} />
           <BannerCard banner={settings.webBanner} onSaved={(webBanner) => setSettings({ ...settings, webBanner })} />
         </div>
       )}
     </StoreLayout>
+  );
+}
+
+/** Who can open a new store: everyone, or only creators on a paid plan. */
+function AccessCard({ settings, onSaved }: { settings: Settings; onSaved: (s: Settings) => void }) {
+  const on = Boolean(settings.requireSubscription);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, flash] = useFlash();
+
+  const change = async (value: boolean) => {
+    setBusy(true);
+    setError('');
+    try {
+      onSaved(await storeAdminApi.updateSettings({ requireSubscription: value }));
+      flash();
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="p-5">
+      <div className="flex items-start gap-4">
+        <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl', on ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/60')}>
+          <Crown size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Paid plan required to open a store</h2>
+            <Badge tone={on ? 'orange' : 'gray'}>{on ? 'On' : 'Off'}</Badge>
+            <Saved show={saved} />
+          </div>
+          <p className="mt-1 text-sm text-gray-500 dark:text-white/55">
+            {on
+              ? 'Creators must have an active paid Fanitt plan (monthly or yearly) before they can create a new store. The app shows them the plans first.'
+              : 'Any creator can open a store — no plan needed.'}{' '}
+            Stores that already exist are not affected.
+          </p>
+          <ErrorBanner message={error} onClose={() => setError('')} />
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          {busy && <Loader2 size={14} className="animate-spin text-gray-400" />}
+          <Toggle on={on} disabled={busy} onChange={change} />
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -327,7 +377,7 @@ function BannerCard({ banner, onSaved }: { banner: WebBanner; onSaved: (b: WebBa
           <input value={form.appDeepLink} onChange={(e) => set('appDeepLink', e.target.value)} placeholder="App link, e.g. fanitt://store" className={inputClasses} />
           <div className="flex flex-wrap items-center gap-2">
             <ImagePicker label={form.imageUrl ? 'Change image' : 'Upload image'} busy={busy === 'image'} onFile={upload} />
-            <span className="text-[11px] text-gray-400">Best: 1600 × 600 (wide), under 1 MB. Keep important text away from the edges.</span>
+            <span className="text-[11px] text-gray-400">Best: 1600 × 500 (wide), under 1 MB</span>
           </div>
         </div>
 
@@ -335,26 +385,18 @@ function BannerCard({ banner, onSaved }: { banner: WebBanner; onSaved: (b: WebBa
           <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">
             <Smartphone size={13} /> Preview
           </p>
-          {/* Same layout as the website: full image (never cropped), text strip below only if filled in. */}
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0A0A0A]">
+          <div className="relative overflow-hidden rounded-2xl bg-[#0A0A0A]">
             {form.imageUrl ? (
-              <img src={form.imageUrl} alt="" className="block h-auto w-full" />
+              <img src={form.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
             ) : (
-              <div className="flex aspect-[16/5] items-center justify-center bg-gradient-to-br from-orange-600/60 to-pink-600/40 text-xs font-semibold text-white/80">
-                Upload a banner image
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/60 to-pink-600/40" />
             )}
-            {(form.title || form.subtitle || form.buttonText) && (
-              <div className="flex flex-col gap-2 border-t border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  {form.title && <p className="break-words text-base font-bold text-white">{form.title}</p>}
-                  {form.subtitle && <p className="mt-0.5 break-words text-xs text-white/70">{form.subtitle}</p>}
-                </div>
-                <span className="inline-flex shrink-0 justify-center rounded-full bg-orange-500 px-4 py-2 text-xs font-bold text-white">{form.buttonText || 'Get the app'}</span>
-              </div>
-            )}
+            <div className="relative bg-gradient-to-r from-black/75 via-black/40 to-transparent p-6">
+              <p className="text-xl font-bold text-white">{form.title || 'Banner title'}</p>
+              <p className="mt-1 max-w-xs text-sm text-white/80">{form.subtitle}</p>
+              <span className="mt-4 inline-block rounded-full bg-orange-500 px-4 py-2 text-xs font-bold text-white">{form.buttonText || 'Get the app'}</span>
+            </div>
           </div>
-          <p className="mt-2 text-[11px] text-gray-400 dark:text-white/40">The whole image always shows on desktop and mobile. Leave title, subtitle and button empty if your image already has text.</p>
         </div>
       </div>
 

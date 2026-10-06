@@ -33,6 +33,8 @@ import AdminCampaigns from '@/pages/AdminCampaigns';
 import AdminHomeLayout from '@/pages/AdminHomeLayout';
 import AdminMeets from '@/pages/AdminMeets';
 import AdminAppAnalytics from '@/pages/AdminAppAnalytics';
+import AdminAccountDeletions from '@/pages/AdminAccountDeletions';
+import AdminHomeBanners from '@/pages/AdminHomeBanners';
 // Fanitt Store
 import StoreOverview from '@/FanittStore/pages/StoreOverview';
 import StoreStores from '@/FanittStore/pages/StoreStores';
@@ -120,6 +122,8 @@ function AppRoutes() {
         <Route path="/campaigns" element={<Shell><PageTransition><AdminCampaigns /></PageTransition></Shell>} />
         <Route path="/home-layout" element={<Shell><PageTransition><AdminHomeLayout /></PageTransition></Shell>} />
         <Route path="/live-sessions" element={<Shell><PageTransition><AdminMeets /></PageTransition></Shell>} />
+        <Route path="/home-banners" element={<Shell><PageTransition><AdminHomeBanners /></PageTransition></Shell>} />
+        <Route path="/account-deletions" element={<Shell><PageTransition><AdminAccountDeletions /></PageTransition></Shell>} />
         <Route path="/app-analytics" element={<Shell><PageTransition><AdminAppAnalytics /></PageTransition></Shell>} />
         {/* Fanitt Store */}
         <Route path="/store" element={<Shell><PageTransition><StoreOverview /></PageTransition></Shell>} />

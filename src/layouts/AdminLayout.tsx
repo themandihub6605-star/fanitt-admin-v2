@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Users2,
+  UserX,
+  Images,
   ShieldCheck,
   Building2,
   Percent,
@@ -65,6 +67,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/users', label: 'Users', icon: Users2 },
       { href: '/verifications', label: 'Verifications', icon: ShieldCheck },
+      { href: '/account-deletions', label: 'Account Deletions', icon: UserX },
       { href: '/agencies', label: 'Agencies', icon: Building2 },
       { href: '/admins', label: 'Admin Accounts', icon: UserCog },
     ],
@@ -84,6 +87,7 @@ const NAV_SECTIONS = [
     label: 'Content',
     items: [
       { href: '/home-layout', label: 'App Home Screen', icon: LayoutGrid },
+      { href: '/home-banners', label: 'Home Slider', icon: Images },
       { href: '/live-sessions', label: 'Live Sessions', icon: Video },
       { href: '/campaigns', label: 'Campaigns', icon: Briefcase },
       { href: '/moderation', label: 'Content Moderation', icon: Flag },

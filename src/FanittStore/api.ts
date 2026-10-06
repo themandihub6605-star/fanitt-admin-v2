@@ -230,6 +230,8 @@ export interface WebBanner {
 export interface StoreSettings {
   storeFeePercent: number;
   fanboxFeePercent: number;
+  /** On = creators need a paid plan to open a new store. */
+  requireSubscription?: boolean;
   termsVersion: string;
   termsText: string;
   toolCards: ToolCard[];
@@ -292,7 +294,7 @@ export const storeAdminApi = {
   fanbox: (q: Query) => paged<OrderRow>(`${base}/fanbox`, 'fanbox', q),
 
   settings: () => getData<StoreSettings>(`${base}/settings`),
-  updateSettings: (body: Partial<Pick<StoreSettings, 'storeFeePercent' | 'fanboxFeePercent' | 'termsVersion' | 'termsText'>>) =>
+  updateSettings: (body: Partial<Pick<StoreSettings, 'storeFeePercent' | 'fanboxFeePercent' | 'requireSubscription' | 'termsVersion' | 'termsText'>>) =>
     apiClient.patch<Envelope<StoreSettings>>(`${base}/settings`, body).then((r) => r.data.data),
   updateToolCard: (key: ToolKey, body: Partial<Pick<ToolCard, 'title' | 'description' | 'enabled' | 'order'>>) =>
     apiClient.patch<Envelope<ToolCard[]>>(`${base}/tool-cards/${key}`, body).then((r) => r.data.data),
