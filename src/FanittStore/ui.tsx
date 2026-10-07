@@ -73,11 +73,12 @@ export function StatusBadge({ status }: { status: string }) {
   return <Badge tone={TONES[status] || 'gray'}>{status === 'live' ? '● Live' : label(status)}</Badge>;
 }
 
-export const ITEM_LABEL: Record<ItemType, string> = {
+export const ITEM_LABEL: Record<ItemType | 'community', string> = {
   digital_product: 'Product',
   live_stream: 'Live ticket',
   call: 'Call',
   fanbox: 'FanBox',
+  community: 'Community',
 };
 
 // ---------- small components ----------
