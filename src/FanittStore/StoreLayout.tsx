@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, Store, Package, Receipt, Radio, PhoneCall, Link2, Gift, Settings } from 'lucide-react';
+import { BarChart3, Store, Package, Receipt, Radio, PhoneCall, Link2, Gift, Settings, ShoppingBag } from 'lucide-react';
 import { PageHeader } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 export const STORE_TABS = [
   { href: '/store', label: 'Overview', icon: BarChart3 },
   { href: '/store/stores', label: 'Stores & KYC', icon: Store },
+  { href: '/store/shop', label: 'Shop orders', icon: ShoppingBag },
   { href: '/store/products', label: 'Products', icon: Package },
   { href: '/store/orders', label: 'Orders', icon: Receipt },
   { href: '/store/lives', label: 'Live', icon: Radio },

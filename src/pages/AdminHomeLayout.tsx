@@ -112,6 +112,98 @@ function PinPicker({ section, onPick }: { section: HomeSection; onPick: (item: P
   );
 }
 
+const MAX_BRANDS = 10;
+
+/** Brands: every brand as a tile — tick up to 10. Only the ticked brands
+ * show on the app home, in the order listed below the grid. */
+function BrandPicker({ section, onChange }: { section: HomeSection; onChange: (pinned: PinItem[]) => void }) {
+  const [all, setAll] = useState<PinItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('');
+  const picked = useMemo(() => new Set(section.pinned.map((p) => p.id)), [section.pinned]);
+  const full = section.pinned.length >= MAX_BRANDS;
+
+  useEffect(() => {
+    homeLayoutApi
+      .search('brands', '')
+      .then(setAll)
+      .catch((err) => setError(getApiErrorMessage(err)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const shown = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    return q ? all.filter((b) => `${b.title} ${b.subtitle}`.toLowerCase().includes(q)) : all;
+  }, [all, filter]);
+
+  const toggle = (item: PinItem) => {
+    if (picked.has(item.id)) onChange(section.pinned.filter((p) => p.id !== item.id));
+    else if (!full) onChange([...section.pinned, item]);
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold text-gray-600 dark:text-white/60">Tick the brands to show on the app home</span>
+        <Badge tone={full ? 'rose' : 'orange'}>
+          {section.pinned.length} / {MAX_BRANDS} selected
+        </Badge>
+      </div>
+      {all.length > 8 && (
+        <div className="relative mb-2">
+          <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter the list…" className={`${inputCls} pl-8 py-1.5`} />
+        </div>
+      )}
+      {loading ? (
+        <div className="flex justify-center py-8 text-gray-400">
+          <Loader2 size={18} className="animate-spin" />
+        </div>
+      ) : error ? (
+        <p className="rounded-xl bg-rose-50 p-3 text-xs text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{error}</p>
+      ) : all.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400 dark:border-white/10">No brands on Fanitt yet.</p>
+      ) : (
+        <div className="grid max-h-80 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
+          {shown.map((b) => {
+            const on = picked.has(b.id);
+            const blocked = !on && full;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => toggle(b)}
+                disabled={blocked}
+                title={blocked ? `You can pick up to ${MAX_BRANDS} brands — remove one first` : undefined}
+                className={`relative flex items-center gap-2 rounded-xl border p-2 text-left transition-colors ${
+                  on
+                    ? 'border-orange-400 bg-orange-50 ring-1 ring-orange-300 dark:border-orange-400/60 dark:bg-orange-500/10'
+                    : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'
+                } disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                <Thumb item={b} size={34} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold text-gray-900 dark:text-white">{b.title}</span>
+                  <span className="block truncate text-[11px] text-gray-500 dark:text-white/50">{b.subtitle}</span>
+                </span>
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                    on ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-300 dark:border-white/20'
+                  }`}
+                >
+                  {on && <Check size={12} />}
+                </span>
+              </button>
+            );
+          })}
+          {shown.length === 0 && <p className="col-span-full py-4 text-center text-xs text-gray-400">No brand matches “{filter}”.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminHomeLayout() {
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [defaults, setDefaults] = useState<{ key: SectionKey; title: string; subtitle: string }[]>([]);
@@ -293,12 +385,25 @@ export default function AdminHomeLayout() {
 
                             {s.canPin ? (
                               <div>
-                                <span className="mb-1 block text-xs font-semibold text-gray-600 dark:text-white/60">
-                                  Pinned first (max 20) — the rest fill in automatically after these
-                                </span>
-                                <PinPicker section={s} onPick={(item) => update(s.key, { pinned: [...s.pinned, item].slice(0, 20) })} />
+                                {s.key === 'brands' ? (
+                                  <BrandPicker section={s} onChange={(pinned) => update(s.key, { pinned: pinned.slice(0, MAX_BRANDS) })} />
+                                ) : (
+                                  <>
+                                    <span className="mb-1 block text-xs font-semibold text-gray-600 dark:text-white/60">
+                                      Pinned first (max 20) — the rest fill in automatically after these
+                                    </span>
+                                    <PinPicker section={s} onPick={(item) => update(s.key, { pinned: [...s.pinned, item].slice(0, 20) })} />
+                                  </>
+                                )}
+                                {s.key === 'brands' && s.pinned.length > 0 && (
+                                  <span className="mt-4 block text-xs font-semibold text-gray-600 dark:text-white/60">Order on the app (use the arrows)</span>
+                                )}
                                 <ul className="mt-3 space-y-2">
-                                  {s.pinned.length === 0 && <li className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400 dark:border-white/10">Nothing pinned — the app shows its usual picks.</li>}
+                                  {s.pinned.length === 0 && (
+                                    <li className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400 dark:border-white/10">
+                                      {s.key === 'brands' ? 'No brand selected — the brands strip is hidden on the app home.' : 'Nothing pinned — the app shows its usual picks.'}
+                                    </li>
+                                  )}
                                   {s.pinned.map((p, pi) => (
                                     <li key={p.id} className="flex items-center gap-2 rounded-xl border border-gray-200 p-2 dark:border-white/10">
                                       <Badge tone="orange">{pi + 1}</Badge>

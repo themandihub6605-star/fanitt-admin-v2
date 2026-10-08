@@ -45,6 +45,7 @@ import StoreCalls from '@/FanittStore/pages/StoreCalls';
 import StoreAffiliate from '@/FanittStore/pages/StoreAffiliate';
 import StoreFanbox from '@/FanittStore/pages/StoreFanbox';
 import StoreSettings from '@/FanittStore/pages/StoreSettings';
+import StoreShop from '@/FanittStore/pages/StoreShop';
 
 function useAuthHydration() {
   const dispatch = useAppDispatch();
@@ -128,6 +129,7 @@ function AppRoutes() {
         {/* Fanitt Store */}
         <Route path="/store" element={<Shell><PageTransition><StoreOverview /></PageTransition></Shell>} />
         <Route path="/store/stores" element={<Shell><PageTransition><StoreStores /></PageTransition></Shell>} />
+        <Route path="/store/shop" element={<Shell><PageTransition><StoreShop /></PageTransition></Shell>} />
         <Route path="/store/products" element={<Shell><PageTransition><StoreProducts /></PageTransition></Shell>} />
         <Route path="/store/orders" element={<Shell><PageTransition><StoreOrders /></PageTransition></Shell>} />
         <Route path="/store/lives" element={<Shell><PageTransition><StoreLives /></PageTransition></Shell>} />
