@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Check, X, Building2, MapPin, Phone, KeyRound, Copy, CheckCheck, Plus } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, Building2, MapPin, Phone, KeyRound, Copy, CheckCheck, Plus } from '@/icons';
 import { adminApi } from '@/services/adminApi';
 import type { ApiAgency } from '@/types/agency';
 import { getApiErrorMessage } from '@/services/apiClient';
@@ -62,7 +62,7 @@ function CreateAgencyModal({ onClose, onCreated }: { onClose: () => void; onCrea
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">Create Agency Account</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 dark:text-white/50 dark:hover:text-white">
@@ -312,7 +312,7 @@ export default function AdminAgencyApprovals() {
 
       {createdCreds && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setCreatedCreds(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl border border-emerald-200 bg-white p-6 dark:border-emerald-500/30 dark:bg-[#171B26]">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl border border-emerald-200 bg-white p-6 dark:border-emerald-500/30 dark:bg-[#171B26]">
             <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Agency created — share these credentials:</p>
             <p className="mt-3 text-sm text-gray-700 dark:text-white/80">
               Email: <span className="font-mono">{createdCreds.email}</span>

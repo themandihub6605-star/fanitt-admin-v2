@@ -21,10 +21,24 @@ import {
   BadgeCheck,
   X,
   CheckCircle2,
-} from 'lucide-react';
+} from '@/icons';
 import { adminUsersApi, type UserRow, type UserStats, type UserListParams } from '@/services/adminUsersApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, EmptyState, StatCard } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, EmptyState, StatCard, confirmDialog, exportCsv, promptDialog, type Column } from '@/components/AdminUI';
+import { Download } from '@/icons';
+
+const USER_CSV: Column<UserRow>[] = [
+  { key: 'name', header: 'Name', render: () => null, value: (u) => u.name },
+  { key: 'email', header: 'Email', render: () => null, value: (u) => u.email },
+  { key: 'phone', header: 'Phone', render: () => null, value: (u) => u.phone ?? '' },
+  { key: 'role', header: 'Role', render: () => null, value: (u) => u.role },
+  { key: 'signup', header: 'Sign-up method', render: () => null, value: (u) => u.authProvider ?? '' },
+  { key: 'verified', header: 'Email verified', render: () => null, value: (u) => (u.isEmailVerified ? 'yes' : 'no') },
+  { key: 'status', header: 'Status', render: () => null, value: (u) => (u.isSuspended ? 'suspended' : u.deletionStatus === 'pending' ? 'deletion requested' : 'active') },
+  { key: 'joined', header: 'Joined', render: () => null, value: (u) => new Date(u.createdAt).toLocaleString('en-IN') },
+  { key: 'last', header: 'Last login', render: () => null, value: (u) => (u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN') : '') },
+  { key: 'id', header: 'User ID', render: () => null, value: (u) => u._id },
+];
 import { cn } from '@/utils/cn';
 
 const ROLES = ['', 'fan', 'creator', 'brand', 'agency', 'admin'];
@@ -159,10 +173,11 @@ export default function AdminUsers() {
     setActingOn(u._id);
     try {
       if (u.isSuspended) {
+        if (!(await confirmDialog({ title: `Reinstate ${u.name}?`, message: 'They can log in and use Fanitt again.', confirmLabel: 'Reinstate' }))) return;
         const updated = await adminUsersApi.reinstate(u._id);
         setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, ...updated, profileSummary: x.profileSummary } : x)));
       } else {
-        const reason = window.prompt('Reason for suspension (optional):');
+        const reason = await promptDialog({ title: `Suspend ${u.name}?`, message: 'They’re logged out and can’t use Fanitt until you reinstate them.', tone: 'danger', confirmLabel: 'Suspend', input: { label: 'Reason (optional)', placeholder: 'e.g. Spam or fake profile' } });
         if (reason === null) return;
         const updated = await adminUsersApi.suspend(u._id, reason);
         setUsers((prev) => prev.map((x) => (x._id === u._id ? { ...x, ...updated, profileSummary: x.profileSummary } : x)));
@@ -202,6 +217,11 @@ export default function AdminUsers() {
       <PageHeader
         title="Users"
         description={`Every account on the platform — ${total.toLocaleString('en-IN')} matching. Click a row for full details.`}
+        actions={
+          <Button variant="outline" size="sm" disabled={!users.length} onClick={() => exportCsv('users', USER_CSV, users)} title="Exports the users on this page">
+            <Download size={13} /> Export this page
+          </Button>
+        }
       />
 
       {/* Numbers */}
@@ -558,7 +578,7 @@ function AskUpdateModal({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-[#16161d]"
+        className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-[#16161d]"
       >
         <div className="flex items-start justify-between gap-4">
           <div>

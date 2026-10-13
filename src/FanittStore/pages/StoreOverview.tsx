@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertTriangle, IndianRupee, Percent, PhoneCall, Radio, ShoppingBag, Store, MousePointerClick } from 'lucide-react';
+import { AlertTriangle, IndianRupee, Percent, PhoneCall, Radio, ShoppingBag, Store, MousePointerClick } from '@/icons';
 import { Card, StatCard, TabGroup, Tab } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import StoreLayout from '../StoreLayout';
@@ -48,7 +48,7 @@ export default function StoreOverview() {
       {overview && overview.pendingKyc > 0 && (
         <Link
           to="/store/stores?kyc=pending"
-          className="mb-5 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+          className="mb-5 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
         >
           <AlertTriangle size={18} />
           {overview.pendingKyc} store{overview.pendingKyc === 1 ? '' : 's'} waiting for KYC review →
@@ -85,8 +85,8 @@ export default function StoreOverview() {
                   <AreaChart data={analytics.daily} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
                     <defs>
                       <linearGradient id="grossFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#F4511E" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#F4511E" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#FF6A1F" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#FF6A1F" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-gray-100 dark:text-white/5" />
@@ -97,7 +97,7 @@ export default function StoreOverview() {
                       labelFormatter={(d: string) => d}
                       contentStyle={{ borderRadius: 12, fontSize: 12 }}
                     />
-                    <Area type="monotone" dataKey="gross" stroke="#F4511E" strokeWidth={2} fill="url(#grossFill)" />
+                    <Area type="monotone" dataKey="gross" stroke="#FF6A1F" strokeWidth={2} fill="url(#grossFill)" />
                     <Area type="monotone" dataKey="net" stroke="#EC4899" strokeWidth={2} fill="transparent" />
                   </AreaChart>
                 </ResponsiveContainer>

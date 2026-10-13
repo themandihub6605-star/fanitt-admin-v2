@@ -1,8 +1,9 @@
+import { DisputeHistory } from '@/components/DisputeHistory';
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, ShieldAlert, Paperclip, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertCircle, ShieldAlert, Paperclip, ExternalLink, CheckCircle2 } from '@/icons';
 import { disputeApi, type ApiDispute, type DisputeOutcome } from '@/services/disputeApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, EmptyState } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 function formatRupees(paise: number) {
@@ -39,7 +40,7 @@ function DisputeCard({ dispute, onResolved }: { dispute: ApiDispute; onResolved:
         return;
       }
     }
-    if (!window.confirm(`Confirm resolution: ${OUTCOME_OPTIONS.find((o) => o.value === outcome)?.label}? This can't be undone.`)) return;
+    if (!(await confirmDialog({ title: 'Resolve this dispute?', message: `${OUTCOME_OPTIONS.find((o) => o.value === outcome)?.label}. Money moves right away and this can’t be undone.`, tone: 'danger', confirmLabel: 'Resolve dispute' }))) return;
 
     setResolving(true);
     setError('');
@@ -225,6 +226,8 @@ export default function AdminEscrowDisputes() {
           ))}
         </div>
       )}
+
+      <DisputeHistory />
     </div>
   );
 }

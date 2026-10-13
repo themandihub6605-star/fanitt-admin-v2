@@ -17,14 +17,23 @@ const STORAGE_KEY = 'fanitt_admin_theme';
  * in tailwind.config.js), and persists any change to localStorage. */
 export function ThemeProvider({ children }: PropsWithChildren) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    let saved: Theme | null = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    } catch {
+      // storage blocked
+    }
     if (saved === 'light' || saved === 'dark') return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light'; // light by default; the toggle in the top bar switches to dark
   });
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem(STORAGE_KEY, theme);
+    try {
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      // not remembered
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));

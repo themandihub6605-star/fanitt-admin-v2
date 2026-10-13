@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Ban, CheckCircle2, ExternalLink, FileText, Loader2, RotateCcw, ShieldCheck, Store as StoreIcon, XCircle } from 'lucide-react';
-import { Badge, Button, Card, EmptyState } from '@/components/AdminUI';
+import { Ban, CheckCircle2, ExternalLink, FileText, Loader2, RotateCcw, ShieldCheck, Store as StoreIcon, XCircle } from '@/icons';
+import { Badge, Button, Card, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type KycStatus, type StoreDetail, type StoreRow, type StoreStatus } from '../api';
@@ -191,7 +191,7 @@ function StoreDetailModal({ id, onClose, onChanged }: { id: string; onClose: () 
             <div className="flex flex-wrap gap-2">
               {s.kycStatus === 'pending' && (
                 <>
-                  <Button onClick={() => window.confirm('Approve KYC? The store goes live and can start selling.') && act(() => storeAdminApi.reviewKyc(id, { decision: 'approve' }))} disabled={busy}>
+                  <Button onClick={async () => (await confirmDialog({ title: 'Approve KYC?', message: 'The store goes live and can start selling.', confirmLabel: 'Approve KYC' })) && act(() => storeAdminApi.reviewKyc(id, { decision: 'approve' }))} disabled={busy}>
                     {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />} Approve KYC
                   </Button>
                   <Button variant="danger" onClick={() => setReasonFor('reject')} disabled={busy}>
@@ -200,7 +200,7 @@ function StoreDetailModal({ id, onClose, onChanged }: { id: string; onClose: () 
                 </>
               )}
               {s.status === 'suspended' ? (
-                <Button variant="outline" onClick={() => window.confirm('Reinstate this store?') && act(() => storeAdminApi.setStoreStatus(id, { action: 'reinstate' }))} disabled={busy}>
+                <Button variant="outline" onClick={async () => (await confirmDialog({ title: 'Reinstate this store?', message: 'It can sell again straight away.', confirmLabel: 'Reinstate' })) && act(() => storeAdminApi.setStoreStatus(id, { action: 'reinstate' }))} disabled={busy}>
                   <RotateCcw size={14} /> Reinstate
                 </Button>
               ) : (

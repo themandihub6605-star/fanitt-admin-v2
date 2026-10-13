@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Receipt, Undo2 } from 'lucide-react';
+import { Receipt, Undo2 } from '@/icons';
 import { Badge, Button, Card, EmptyState } from '@/components/AdminUI';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type OrderRow, type OrderStatus } from '../api';

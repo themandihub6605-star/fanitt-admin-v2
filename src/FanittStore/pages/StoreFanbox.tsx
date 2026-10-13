@@ -1,4 +1,4 @@
-import { Gift, Undo2 } from 'lucide-react';
+import { Gift, Undo2 } from '@/icons';
 import { useState } from 'react';
 import { Badge, Button, Card, EmptyState } from '@/components/AdminUI';
 import StoreLayout from '../StoreLayout';

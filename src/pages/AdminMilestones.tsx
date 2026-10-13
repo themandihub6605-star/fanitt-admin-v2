@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Briefcase, Clock, ShieldCheck, FileEdit, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertCircle, Briefcase, Clock, ShieldCheck, FileEdit, ShieldAlert, CheckCircle2 } from '@/icons';
 import { adminApi, type AdminMilestone } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState } from '@/components/AdminUI';

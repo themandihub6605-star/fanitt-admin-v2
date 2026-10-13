@@ -34,7 +34,12 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Something was changed — let the sidebar badges / bell refresh their counts.
+    const method = (response.config.method || 'get').toLowerCase();
+    if (method !== 'get' && typeof window !== 'undefined') window.dispatchEvent(new Event('fanitt-admin:changed'));
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as (typeof error.config) & { _retry?: boolean };
 
@@ -54,6 +59,10 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       }
 
+      // Session is over — tell the person why they're back on the login page.
+      if (store.getState().auth.isAuthenticated) {
+        sessionStorage.setItem('fanitt_admin_session_expired', '1');
+      }
       store.dispatch(logout());
     }
 
@@ -63,7 +72,13 @@ apiClient.interceptors.response.use(
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || error.message || 'Something went wrong';
+    const msg = error.response?.data?.message;
+    if (msg) return msg;
+    if (!error.response) return 'Can’t reach the server. Check your internet connection, or the API may be down.';
+    if (error.response.status === 403) return 'Your account isn’t allowed to do this.';
+    if (error.response.status === 404) return 'Not found — the server may need the latest backend update.';
+    if (error.response.status >= 500) return 'The server had a problem. Try again in a moment.';
+    return error.message || 'Something went wrong';
   }
   return 'Something went wrong';
 }

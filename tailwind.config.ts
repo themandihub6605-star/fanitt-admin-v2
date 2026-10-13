@@ -27,6 +27,7 @@ export default {
       fontFamily: {
         display: typography.fontDisplay.split(',').map((f) => f.trim().replace(/'/g, '')),
         body: typography.fontBody.split(',').map((f) => f.trim().replace(/'/g, '')),
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: typography.scale,
       borderRadius: radius,

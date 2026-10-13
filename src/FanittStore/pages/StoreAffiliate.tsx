@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { EyeOff, Link2, MousePointerClick, RotateCcw, ExternalLink } from 'lucide-react';
-import { Button, Card, EmptyState } from '@/components/AdminUI';
+import { EyeOff, Link2, MousePointerClick, RotateCcw, ExternalLink } from '@/icons';
+import { Button, Card, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type AffiliateRow, type AffiliateStatus } from '../api';
@@ -16,7 +16,7 @@ export default function StoreAffiliate() {
   const list = usePagedList<AffiliateRow>((page) => storeAdminApi.affiliate({ page, status, search: q }), [status, q]);
 
   const restore = async (p: AffiliateRow) => {
-    if (!window.confirm('Restore this link? It comes back hidden — the creator decides when to show it.')) return;
+    if (!(await confirmDialog({ title: 'Restore this link?', message: 'It comes back hidden — the creator decides when to show it.', confirmLabel: 'Restore' }))) return;
     try {
       await storeAdminApi.restoreAffiliate(p._id);
       list.reload();

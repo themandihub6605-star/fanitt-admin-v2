@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Wallet, Check, X, CreditCard, Truck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Loader2, Wallet, Check, X, CreditCard, Truck, Copy, Download } from '@/icons';
 import { adminApi, type AdminWithdrawal } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, TabGroup, Tab, Button, EmptyState } from '@/components/AdminUI';
+import { PageHeader, Card, TabGroup, Tab, Button, EmptyState, KpiCard, LoadingState, Notice, SearchInput, Toolbar, confirmDialog, exportCsv, fmt, promptDialog, toast, type Column } from '@/components/AdminUI';
 
 function formatRupees(paise: number) {
   return `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
@@ -10,12 +10,32 @@ function formatRupees(paise: number) {
 
 const TABS = ['initiated', 'processing', 'completed', 'rejected'] as const;
 
+const CSV_COLUMNS: Column<AdminWithdrawal>[] = [
+  { key: 'date', header: 'Requested on', render: () => null, value: (w) => new Date(w.createdAt).toLocaleString('en-IN') },
+  { key: 'name', header: 'Name', render: () => null, value: (w) => w.user?.name ?? '' },
+  { key: 'email', header: 'Email', render: () => null, value: (w) => w.user?.email ?? '' },
+  { key: 'role', header: 'Role', render: () => null, value: (w) => w.user?.role ?? '' },
+  { key: 'method', header: 'Method', render: () => null, value: (w) => w.payoutMethod },
+  { key: 'details', header: 'Payout details', render: () => null, value: (w) => w.payoutDetails },
+  { key: 'amount', header: 'Requested (₹)', render: () => null, value: (w) => w.amount / 100 },
+  { key: 'fee', header: 'Platform fee (₹)', render: () => null, value: (w) => w.platformFee / 100 },
+  { key: 'net', header: 'Net payout (₹)', render: () => null, value: (w) => w.netPayoutAmount / 100 },
+  { key: 'status', header: 'Status', render: () => null, value: (w) => w.status },
+  { key: 'note', header: 'Admin note', render: () => null, value: (w) => w.adminNote ?? '' },
+];
+
 export default function AdminWithdrawals() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('initiated');
   const [withdrawals, setWithdrawals] = useState<AdminWithdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actingOn, setActingOn] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return withdrawals;
+    return withdrawals.filter((w) => `${w.user?.name} ${w.user?.email} ${w.payoutDetails}`.toLowerCase().includes(q));
+  }, [withdrawals, search]);
 
   const load = () => {
     setLoading(true);
@@ -34,6 +54,7 @@ export default function AdminWithdrawals() {
     try {
       await adminApi.markWithdrawalProcessing(id);
       setWithdrawals((prev) => prev.filter((w) => w._id !== id));
+      toast.success('Moved to processing');
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -42,11 +63,12 @@ export default function AdminWithdrawals() {
   };
 
   const handleMarkPaid = async (id: string) => {
-    if (!window.confirm('Confirm you have actually sent this payout via UPI/bank transfer?')) return;
+    if (!(await confirmDialog({ title: 'Mark this payout as paid?', message: 'Only do this after the money has actually been sent by UPI or bank transfer. The creator is told it’s paid.', confirmLabel: 'Yes, it’s paid' }))) return;
     setActingOn(id);
     try {
       await adminApi.markWithdrawalPaid(id);
       setWithdrawals((prev) => prev.filter((w) => w._id !== id));
+      toast.success('Marked as paid');
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -55,11 +77,13 @@ export default function AdminWithdrawals() {
   };
 
   const handleReject = async (id: string) => {
-    const reason = window.prompt('Reason for rejecting (the amount will be refunded to their wallet):') || '';
+    const reason = await promptDialog({ title: 'Reject this withdrawal?', message: 'The amount goes back to their Fanitt wallet.', tone: 'danger', confirmLabel: 'Reject', input: { label: 'Reason (shown to the user)', placeholder: 'e.g. Bank details don’t match the account name', multiline: true } });
+    if (reason === null) return;
     setActingOn(id);
     try {
       await adminApi.rejectWithdrawal(id, reason);
       setWithdrawals((prev) => prev.filter((w) => w._id !== id));
+      toast.success('Withdrawal rejected — amount returned to their wallet');
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -71,43 +95,63 @@ export default function AdminWithdrawals() {
     <div>
       <PageHeader title="Withdrawal Requests" description="Payout requests from creators, brands, and agencies." />
 
-      <TabGroup>
-        {TABS.map((t) => (
-          <Tab key={t} active={tab === t} onClick={() => setTab(t)}>
-            <span className="capitalize">{t}</span>
-          </Tab>
-        ))}
-      </TabGroup>
-
-      {error && (
-        <div className="mt-5 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
-          <AlertCircle size={16} className="shrink-0" /> {error}
-        </div>
-      )}
-
-      {loading && (
-        <div className="mt-16 flex flex-col items-center gap-3 text-gray-400 dark:text-white/40">
-          <Loader2 size={28} className="animate-spin" />
-          <p className="text-sm">Loading withdrawals...</p>
-        </div>
-      )}
-
-      {!loading && withdrawals.length === 0 && (
-        <div className="mt-6">
-          <EmptyState icon={Wallet} message={`No ${tab} withdrawals.`} />
-        </div>
-      )}
+      <Toolbar
+        actions={
+          <Button variant="outline" size="sm" disabled={!shown.length} onClick={() => exportCsv(`withdrawals-${tab}`, CSV_COLUMNS, shown)}>
+            <Download size={13} /> Export CSV
+          </Button>
+        }
+      >
+        <TabGroup>
+          {TABS.map((t) => (
+            <Tab key={t} active={tab === t} onClick={() => setTab(t)} groupId="wd-tabs">
+              <span className="capitalize">{t}</span>
+            </Tab>
+          ))}
+        </TabGroup>
+        <SearchInput value={search} onChange={setSearch} placeholder="Search name, UPI or bank details…" />
+      </Toolbar>
 
       {!loading && withdrawals.length > 0 && (
-        <div className="mt-6 space-y-3">
-          {withdrawals.map((w) => (
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <KpiCard label={`${fmt.label(tab)} requests`} value={fmt.number(shown.length)} icon={Wallet} tone="orange" />
+          <KpiCard label="Total requested" value={fmt.rupees(shown.reduce((n, w) => n + w.amount, 0))} icon={CreditCard} tone="sky" />
+          <KpiCard label="Net to pay out" value={fmt.rupees(shown.reduce((n, w) => n + w.netPayoutAmount, 0))} icon={Check} tone="emerald" hint="After the platform fee" />
+        </div>
+      )}
+
+      {error && (
+        <Notice tone="error" className="mb-4" onClose={() => setError('')}>
+          {error}
+        </Notice>
+      )}
+
+      {loading && <LoadingState text="Loading withdrawals…" />}
+
+      {!loading && shown.length === 0 && (
+        <Card>
+          <EmptyState icon={Wallet} message={search ? `No ${tab} withdrawals match “${search}”.` : `No ${tab} withdrawals.`} />
+        </Card>
+      )}
+
+      {!loading && shown.length > 0 && (
+        <div className="space-y-3">
+          {shown.map((w) => (
             <Card key={w._id} className="flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-gray-600 dark:text-white/60">
                   {w.user?.name || 'Unknown'} <span className="text-gray-400 dark:text-white/40">({w.user?.role})</span>
                 </p>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400 dark:text-white/40">
-                  <CreditCard size={11} /> {w.payoutMethod.toUpperCase()}: {w.payoutDetails}
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-white/50">
+                  <CreditCard size={11} /> {w.payoutMethod.toUpperCase()}: <span className="font-mono">{w.payoutDetails}</span>
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(w.payoutDetails).then(() => toast.success('Payout details copied'), () => {})}
+                    className="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10"
+                    aria-label="Copy payout details"
+                    title="Copy"
+                  >
+                    <Copy size={11} />
+                  </button>
                 </p>
                 {w.adminNote && <p className="mt-1 text-xs text-rose-500 dark:text-rose-300">Note: {w.adminNote}</p>}
                 <p className="mt-1 text-xs text-gray-300 dark:text-white/30">

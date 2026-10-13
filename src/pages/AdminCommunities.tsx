@@ -1,3 +1,4 @@
+import { CommunityMembersDrawer } from '@/components/CommunityMembersDrawer';
 import { useEffect, useState } from 'react';
 import {
   AlertCircle,
@@ -19,7 +20,7 @@ import {
   Wallet,
   Percent,
   Settings2,
-} from 'lucide-react';
+} from '@/icons';
 import {
   communityAdminApi,
   type AdminCommunity,
@@ -28,7 +29,7 @@ import {
   type CommunitySettings,
 } from '@/services/communityAdminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, EmptyState, StatCard, Tab, TabGroup } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, EmptyState, StatCard, Tab, TabGroup, confirmDialog } from '@/components/AdminUI';
 import { ReasonModal, Pagination, SearchBox, Select, dateTime, rupees, useDebounced } from '@/FanittStore/ui';
 import { storeAdminApi } from '@/FanittStore/api';
 import { cn } from '@/utils/cn';
@@ -74,6 +75,7 @@ function CommunitiesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actingOn, setActingOn] = useState<string | null>(null);
+  const [membersOf, setMembersOf] = useState<{ _id: string; name: string } | null>(null);
 
   useEffect(() => {
     const handle = window.setTimeout(
@@ -111,7 +113,7 @@ function CommunitiesTab() {
   };
 
   const makeFree = async (c: AdminCommunity) => {
-    if (!window.confirm(`Make "${c.name}" free?\n\nEveryone who paid keeps access; new members join for free.`)) return;
+    if (!(await confirmDialog({ title: `Make “${c.name}” free?`, message: 'Everyone who paid keeps access; new members join for free.', confirmLabel: 'Make free' }))) return;
     setActingOn(`${c._id}-free`);
     setError('');
     try {
@@ -125,7 +127,7 @@ function CommunitiesTab() {
   };
 
   const remove = async (c: AdminCommunity) => {
-    if (!window.confirm(`Delete "${c.name}"?\n\nAll its posts, comments, members and chat messages will be permanently removed.`)) return;
+    if (!(await confirmDialog({ title: `Delete “${c.name}”?`, message: 'All its posts, comments, members and chat messages will be permanently removed.', tone: 'danger', confirmLabel: 'Delete community' }))) return;
     setActingOn(`${c._id}-delete`);
     setError('');
     try {
@@ -270,6 +272,9 @@ function CommunitiesTab() {
                       <Toggle on={c.isFeatured} busy={actingOn === `${c._id}-isFeatured`} onClick={() => toggle(c, 'isFeatured')} label="Featured" />
                       Featured
                     </label>
+                    <Button variant="outline" size="sm" onClick={() => setMembersOf({ _id: c._id, name: c.name })}>
+                      <Users2 size={12} /> Members
+                    </Button>
                     <a
                       href={`${SITE_URL}/communities/${c.slug}`}
                       target="_blank"
@@ -292,6 +297,7 @@ function CommunitiesTab() {
             ))}
           </div>
 
+          <CommunityMembersDrawer community={membersOf} onClose={() => setMembersOf(null)} />
           {pages > 1 && (
             <div className="mt-6 flex items-center justify-between">
               <p className="text-xs text-gray-400 dark:text-white/40">

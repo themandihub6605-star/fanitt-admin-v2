@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, ImagePlus, Images, MousePointerClick, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Badge, Button, Card, EmptyState, PageHeader } from '@/components/AdminUI';
+import { ArrowDown, ArrowUp, Eye, ImagePlus, Images, MousePointerClick, Pencil, Plus, Trash2 } from '@/icons';
+import { Badge, Button, Card, EmptyState, PageHeader, confirmDialog } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { homeBannerApi, type BannerAudience, type BannerInput, type BannerLinkType, type BannerPlatform, type HomeBanner } from '@/services/homeBannerApi';
 import { ErrorBanner, Loading, Modal, inputClasses } from '@/FanittStore/ui';
@@ -133,7 +133,7 @@ export default function AdminHomeBanners() {
   };
 
   const remove = async (b: HomeBanner) => {
-    if (!window.confirm('Delete this banner?')) return;
+    if (!(await confirmDialog({ title: 'Delete this banner?', message: 'It disappears from the app home slider.', tone: 'danger', confirmLabel: 'Delete banner' }))) return;
     setBusyId(b._id);
     try {
       await homeBannerApi.remove(b._id);
@@ -249,7 +249,7 @@ function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void;
 /** Same look as the app: rounded picture, soft dark fade at the bottom, optional text. */
 function BannerPreview({ imageUrl, title, subtitle, ctaLabel, className, small }: { imageUrl: string; title: string; subtitle: string; ctaLabel: string; className?: string; small?: boolean }) {
   return (
-    <div className={cn('relative aspect-[5/4] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#F4511E] to-[#EC2A78]', className)}>
+    <div className={cn('relative aspect-[5/4] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#FF6A1F] to-[#EC2A78]', className)}>
       {imageUrl ? <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <ImagePlus className="absolute inset-0 m-auto text-white/60" size={32} />}
       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
       {(title || subtitle || ctaLabel) && (

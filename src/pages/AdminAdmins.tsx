@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Plus, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Plus, ShieldCheck, RefreshCw } from '@/icons';
 import { adminApi, type AdminUser } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Button, EmptyState } from '@/components/AdminUI';

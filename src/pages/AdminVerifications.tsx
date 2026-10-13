@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, AlertCircle, Check, X, Sparkles, Building2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, Sparkles, Building2, ExternalLink, ChevronDown, ChevronUp } from '@/icons';
 import { adminApi, type PendingVerifications } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Button } from '@/components/AdminUI';

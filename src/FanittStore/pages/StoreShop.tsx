@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Ban, Eye, IndianRupee, Loader2, Package, PackageCheck, RotateCcw, Save, ShoppingBag, Truck, Undo2 } from 'lucide-react';
+import { Ban, Eye, IndianRupee, Loader2, Package, PackageCheck, RotateCcw, Save, ShoppingBag, Truck, Undo2 } from '@/icons';
 import { apiClient, getApiErrorMessage } from '@/services/apiClient';
 import { Badge, Button, Card, EmptyState, StatCard } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';

@@ -16,35 +16,38 @@
      class ThemeContext toggles on <html> — reliable regardless of any
      Tailwind `dark:` utility-class quirk, since it's the same mechanism
      Tailwind's own dark: variant uses under the hood. */
-  body {
-    @apply font-body text-gray-900 antialiased dark:text-white;
-    background:
-      radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.06), transparent 28%),
-      radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.05), transparent 30%),
-      #F5F6FB;
-    background-attachment: fixed;
+  html {
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
   }
 
-  .dark body {
-    background:
-      radial-gradient(circle at 15% 0%, rgba(255, 90, 31, 0.10), transparent 28%),
-      radial-gradient(circle at 85% 15%, rgba(236, 42, 120, 0.08), transparent 30%),
-      #0A0A0A;
-    background-attachment: fixed;
+  /* Calm, flat app background (light) / deep ink (dark). The optional
+     photo backgrounds from the picker are drawn by AdminLayout on top. */
+  body {
+    @apply bg-[#F5F6FA] font-body text-[14px] text-gray-900 antialiased dark:bg-[#0B0D13] dark:text-white;
   }
 
   h1, h2, h3, h4 {
     @apply font-display tracking-tight text-gray-900 dark:text-white;
   }
   ::selection {
-    @apply bg-indigo-500/25 text-gray-900 dark:bg-orange-500/40 dark:text-white;
+    @apply bg-orange-500/20 text-gray-900 dark:bg-orange-500/40 dark:text-white;
   }
   :focus-visible {
-    outline: 2px solid #6366F1;
-    outline-offset: 3px;
-  }
-  .dark :focus-visible {
     outline: 2px solid #FF5A1F;
+    outline-offset: 2px;
+  }
+  /* Thin, quiet scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 125, 140, 0.35) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 125, 140, 0.3);
+    border-radius: 999px;
   }
 }
 
@@ -94,4 +97,74 @@
 .dark .skeleton {
   background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
   background-size: 400px 100%;
+}
+/* ---------- Motion ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+/* Cards fade up one after another inside any grid or list. */
+.rise { animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.rise:nth-child(2) { --i: 1; } .rise:nth-child(3) { --i: 2; } .rise:nth-child(4) { --i: 3; }
+.rise:nth-child(5) { --i: 4; } .rise:nth-child(6) { --i: 5; } .rise:nth-child(7) { --i: 6; }
+.rise:nth-child(8) { --i: 7; } .rise:nth-child(9) { --i: 8; } .rise:nth-child(n + 10) { --i: 9; }
+.lift { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgba(76, 40, 180, 0.35); }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45); } 100% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); } }
+.live-dot { animation: pulse-ring 1.4s ease-out infinite; }
+
+/* ---------- Sidebar ----------
+   Light mode: brand orange (#FF5A1F family). Dark mode: near-black with an orange glow.
+   One scroll area only (.sidebar-scroll), so the mouse wheel / trackpad always scrolls it. */
+.sidebar {
+  background:
+    radial-gradient(380px 240px at 0% 0%, rgba(255, 255, 255, 0.16), transparent 70%),
+    radial-gradient(340px 280px at 100% 100%, rgba(255, 196, 120, 0.14), transparent 70%),
+    linear-gradient(180deg, #e8501a 0%, #c9410f 50%, #9c310c 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+.dark .sidebar {
+  background:
+    radial-gradient(420px 260px at 0% 0%, rgba(255, 90, 31, 0.16), transparent 70%),
+    radial-gradient(360px 300px at 100% 100%, rgba(236, 42, 120, 0.08), transparent 70%),
+    linear-gradient(180deg, #1b1a1f 0%, #141317 55%, #0f0e11 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+.sidebar-scroll { scrollbar-color: rgba(255, 255, 255, 0.3) transparent; scrollbar-width: thin; }
+.sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 9999px; }
+.dark .sidebar-scroll { scrollbar-color: rgba(255, 255, 255, 0.14) transparent; }
+.dark .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); }
+/* Short screens: drop the queue card so the menu gets the room. */
+@media (max-height: 720px) { .sidebar-queue { display: none; } }
+
+/* Orange logo on the orange sidebar → sits on a white chip. */
+html:not(.dark) .sidebar-logo { background: #fff; padding: 5px 10px; border-radius: 12px; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.35); }
+/* Light-mode sidebar: orange-on-orange would vanish, so active bits turn white. */
+html:not(.dark) .sidebar .text-white\/35 { color: rgba(255, 255, 255, 0.7); }
+html:not(.dark) .sidebar .text-white\/40 { color: rgba(255, 255, 255, 0.78); }
+html:not(.dark) .sidebar .text-white\/45,
+html:not(.dark) .sidebar .text-white\/55,
+html:not(.dark) .sidebar .text-white\/60 { color: rgba(255, 255, 255, 0.88); }
+html:not(.dark) .sidebar .text-orange-300,
+html:not(.dark) .sidebar .text-orange-200 { color: #fff; }
+html:not(.dark) .sidebar .from-orange-500\/25 { background: rgba(255, 255, 255, 0.2); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+html:not(.dark) .sidebar .bg-orange-400 { background: #fff; box-shadow: 0 0 12px rgba(255, 255, 255, 0.8); }
+html:not(.dark) .sidebar .bg-orange-500 { background: #fff; color: #e8501a; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.35); }
+html:not(.dark) .sidebar .bg-orange-500\/20 { background: rgba(255, 255, 255, 0.22); }
+html:not(.dark) .sidebar .border-orange-400\/40 { border-color: rgba(255, 255, 255, 0.45); }
+html:not(.dark) .sidebar .bg-white\/\[0\.04\],
+html:not(.dark) .sidebar .bg-white\/\[0\.05\] { background: rgba(255, 255, 255, 0.12); }
+html:not(.dark) .sidebar .border-white\/\[0\.06\],
+html:not(.dark) .sidebar .border-white\/\[0\.07\] { border-color: rgba(255, 255, 255, 0.16); }
+html:not(.dark) .sidebar .hover\:bg-white\/\[0\.05\]:hover,
+html:not(.dark) .sidebar .hover\:bg-white\/\[0\.07\]:hover { background: rgba(255, 255, 255, 0.16); }
+html:not(.dark) .sidebar .ring-\[\#141317\],
+html:not(.dark) .sidebar .ring-\[\#1b1a1f\] { --tw-ring-color: #c9410f; }
+/* Dark hero banner (dashboard). */
+.hero-dark {
+  background:
+    radial-gradient(600px 300px at 100% 0%, rgba(255, 90, 31, 0.35), transparent 70%),
+    linear-gradient(120deg, #1c1a1f 0%, #2a1c19 55%, #3a1d16 100%);
+  box-shadow: 0 24px 50px -30px rgba(20, 16, 12, 0.6);
 }

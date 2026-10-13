@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock, Mail, RotateCcw, Trash2, UserX } from 'lucide-react';
+import { CheckCircle2, Clock, Mail, RotateCcw, Trash2, UserX } from '@/icons';
 import { Badge, Button, Card, EmptyState, PageHeader, StatCard, Tab, TabGroup } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { accountDeletionApi, type DeletionList, type DeletionRequest, type DeletionTab } from '@/services/accountDeletionApi';
@@ -117,7 +117,7 @@ function Row({ user, tab, onApprove, onReject }: { user: DeletionRequest; tab: D
         {user.avatarUrl ? (
           <img src={user.avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
         ) : (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F4511E] to-[#EC2A78] text-sm font-black text-white">{initial}</div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6A1F] to-[#EC2A78] text-sm font-black text-white">{initial}</div>
         )}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { confirmDialog } from '@/components/AdminUI';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import {
@@ -10,7 +11,7 @@ import {
   type Participant,
   type RemoteTrack,
 } from 'livekit-client';
-import { Crown, EyeOff, Loader2, LogOut, Mic, MicOff, MonitorUp, Square, UserMinus, Users2, Video, VideoOff, Volume2, X } from 'lucide-react';
+import { Crown, EyeOff, Loader2, LogOut, Mic, MicOff, MonitorUp, Square, UserMinus, Users2, Video, VideoOff, Volume2, X } from '@/icons';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { meetAdminApi, type JoinMode, type MeetRow } from '@/services/meetAdminApi';
 import { cn } from '@/utils/cn';
@@ -63,7 +64,7 @@ function Tile({ participant, isLocal, speaking }: { participant: Participant; is
   return (
     <div
       className={cn(
-        'relative aspect-video overflow-hidden rounded-2xl bg-[#1d2233] ring-2 transition-shadow',
+        'relative aspect-video overflow-hidden rounded-xl bg-[#1d2233] ring-2 transition-shadow',
         speaking ? 'ring-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)]' : 'ring-white/5'
       )}
     >
@@ -71,7 +72,7 @@ function Tile({ participant, isLocal, speaking }: { participant: Participant; is
         <TrackView track={camTrack} />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#F4511E] to-[#EC2A78] text-xl font-bold text-white">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6A1F] to-[#EC2A78] text-xl font-bold text-white">
             {initials(participant.name || participant.identity)}
           </span>
         </div>
@@ -223,7 +224,7 @@ export function MeetRoomViewer({
   };
 
   const remove = async (identity: string, name: string) => {
-    if (!window.confirm(`Remove ${name} from this meeting?`)) return;
+    if (!(await confirmDialog({ title: `Remove ${name} from this meeting?`, message: 'They’re disconnected right away.', tone: 'danger', confirmLabel: 'Remove' }))) return;
     setBusyIdentity(identity);
     try {
       await meetAdminApi.removeParticipant(meet._id, identity);
@@ -325,7 +326,7 @@ export function MeetRoomViewer({
           {phase === 'connected' && (
             <>
               {screenShare?.pub?.track && (
-                <div className="mb-4 overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
+                <div className="mb-4 overflow-hidden rounded-xl bg-black ring-1 ring-white/10">
                   <div className="aspect-video">
                     <TrackView track={screenShare.pub.track} contain />
                   </div>
@@ -446,7 +447,7 @@ export function MeetRoomViewer({
 
       {endOpen && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 p-4" onClick={() => !ending && setEndOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-white/10 bg-[#171B26] p-5">
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-xl border border-white/10 bg-[#171B26] p-5">
             <h3 className="text-base font-bold">End this meeting for everyone?</h3>
             <p className="mt-1 text-xs text-white/50">Everyone is disconnected right away. The creator sees your reason.</p>
             <div className="mt-3 flex flex-wrap gap-1.5">

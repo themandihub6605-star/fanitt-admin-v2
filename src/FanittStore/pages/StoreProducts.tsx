@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { EyeOff, Package, RotateCcw } from 'lucide-react';
-import { Button, Card, EmptyState } from '@/components/AdminUI';
+import { EyeOff, Package, RotateCcw } from '@/icons';
+import { Button, Card, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type ProductRow, type ProductStatus } from '../api';
@@ -16,7 +16,7 @@ export default function StoreProducts() {
   const list = usePagedList<ProductRow>((page) => storeAdminApi.products({ page, status, search: q }), [status, q]);
 
   const restore = async (p: ProductRow) => {
-    if (!window.confirm(`Restore "${p.title}"? It comes back unpublished — the creator decides when to publish it again.`)) return;
+    if (!(await confirmDialog({ title: `Restore “${p.title}”?`, message: 'It comes back unpublished — the creator decides when to publish it again.', confirmLabel: 'Restore' }))) return;
     try {
       await storeAdminApi.restoreProduct(p._id);
       list.reload();

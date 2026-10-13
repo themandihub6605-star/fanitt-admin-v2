@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, Radio, Square, Ticket, Users2 } from 'lucide-react';
+import { Eye, Radio, Square, Ticket, Users2 } from '@/icons';
 import { Badge, Button, Card, EmptyState } from '@/components/AdminUI';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type LiveRow, type LiveStatus } from '../api';

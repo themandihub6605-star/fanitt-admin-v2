@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, Search, X } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, Search, X } from '@/icons';
 import { Badge, Button } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
@@ -180,7 +180,7 @@ export function Modal({ open, title, subtitle, onClose, children, wide }: { open
             transition={{ duration: 0.18 }}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              'my-8 w-full rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#171B26]',
+              'my-8 w-full rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#171B26]',
               wide ? 'max-w-4xl' : 'max-w-md'
             )}
           >

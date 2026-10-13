@@ -17,7 +17,7 @@ import {
   X,
   XCircle,
   Zap,
-} from 'lucide-react';
+} from '@/icons';
 import {
   notificationAdminApi,
   type AudienceRole,
@@ -25,7 +25,7 @@ import {
   type BroadcastStatus,
 } from '@/services/notificationAdminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 const ROLE_OPTIONS: { value: AudienceRole; label: string }[] = [
@@ -189,7 +189,7 @@ export default function AdminBroadcast() {
     const confirmText = scheduleMode
       ? `Schedule this notification for ${audienceLabel} (${count} users) on ${formatDateTime(scheduleIso)}?`
       : `Send this notification now to ${audienceLabel} (${count} users)? This can't be undone.`;
-    if (!window.confirm(confirmText)) return;
+    if (!(await confirmDialog({ title: scheduleMode ? 'Schedule this notification?' : 'Send this notification now?', message: confirmText, confirmLabel: scheduleMode ? 'Schedule' : 'Send now' }))) return;
 
     setSending(true);
     try {
@@ -236,7 +236,7 @@ export default function AdminBroadcast() {
 
   const act = async (b: Broadcast, action: 'cancel' | 'sendNow') => {
     const text = action === 'cancel' ? 'Cancel this scheduled notification?' : 'Send this notification right now?';
-    if (!window.confirm(text)) return;
+    if (!(await confirmDialog({ title: text, tone: action === 'cancel' ? 'danger' : 'default', confirmLabel: action === 'cancel' ? 'Cancel notification' : 'Send now', cancelLabel: 'Keep it' }))) return;
     setActingOn(b._id);
     try {
       const updated = action === 'cancel' ? await notificationAdminApi.cancel(b._id) : await notificationAdminApi.sendNow(b._id);
@@ -502,7 +502,7 @@ export default function AdminBroadcast() {
               <Smartphone size={13} /> Phone preview
             </p>
             <div className="rounded-[28px] bg-gradient-to-b from-gray-800 to-gray-900 p-3">
-              <div className="rounded-2xl bg-white/95 p-3 shadow-lg dark:bg-[#23273a]">
+              <div className="rounded-xl bg-white/95 p-3 shadow-lg dark:bg-[#23273a]">
                 <div className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-orange-500 to-pink-500 text-[10px] font-black text-white">F</span>
                   <span className="text-[11px] font-semibold text-gray-500 dark:text-white/60">Fanitt · now</span>

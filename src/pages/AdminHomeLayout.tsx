@@ -21,7 +21,7 @@ import {
   Video,
   X,
   type LucideIcon,
-} from 'lucide-react';
+} from '@/icons';
 import { Badge, Button, Card, PageHeader } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { homeLayoutApi, type HomeSection, type PinItem, type SectionKey } from '@/services/homeLayoutApi';
@@ -112,7 +112,7 @@ function PinPicker({ section, onPick }: { section: HomeSection; onPick: (item: P
   );
 }
 
-const MAX_BRANDS = 10;
+const MAX_BRANDS = 30;
 
 /** Brands: every brand as a tile — tick up to 10. Only the ticked brands
  * show on the app home, in the order listed below the grid. */
@@ -390,7 +390,7 @@ export default function AdminHomeLayout() {
                                 ) : (
                                   <>
                                     <span className="mb-1 block text-xs font-semibold text-gray-600 dark:text-white/60">
-                                      Pinned first (max 20) — the rest fill in automatically after these
+                                      Pinned first (max 30) — the rest fill in automatically after these
                                     </span>
                                     <PinPicker section={s} onPick={(item) => update(s.key, { pinned: [...s.pinned, item].slice(0, 20) })} />
                                   </>

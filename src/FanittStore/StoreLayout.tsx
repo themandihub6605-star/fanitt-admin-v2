@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, Store, Package, Receipt, Radio, PhoneCall, Link2, Gift, Settings, ShoppingBag } from 'lucide-react';
+import { BarChart3, Store, Package, Receipt, Radio, PhoneCall, Link2, Gift, Settings, ShoppingBag } from '@/icons';
 import { PageHeader } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
+import { StoreSwitch } from '@/components/StoreSwitch';
 
 export const STORE_TABS = [
   { href: '/store', label: 'Overview', icon: BarChart3 },
@@ -24,6 +25,7 @@ export default function StoreLayout({ description, children }: { description: st
   return (
     <div>
       <PageHeader title="Fanitt Store" description={description} />
+      {(pathname === '/store' || pathname === '/store/settings') && <StoreSwitch />}
       <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto pb-1">
         {STORE_TABS.map((tab) => {
           const active = pathname === tab.href;

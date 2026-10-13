@@ -16,11 +16,13 @@ import {
   Heart,
   Play,
   Images,
-} from 'lucide-react';
+} from '@/icons';
 import { adminApi, type UserDetail } from '@/services/adminApi';
 import { getApiErrorMessage, getUploadUrl } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
-import { Card, Badge, Button, StatCard, EmptyState } from '@/components/AdminUI';
+import { Card, Badge, Button, StatCard, EmptyState, confirmDialog, promptDialog, toast } from '@/components/AdminUI';
+import { UserActivityPanel } from '@/components/UserActivityPanel';
+import { User360 } from '@/components/User360';
 
 function formatRupees(paise: number) {
   return `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
@@ -204,13 +206,22 @@ export default function AdminUserDetail() {
 
   const handleToggleSuspend = async () => {
     if (!data || !id) return;
+    let reason = '';
+    if (data.user.isSuspended) {
+      if (!(await confirmDialog({ title: `Reinstate ${data.user.name}?`, message: 'They can log in and use Fanitt again.', confirmLabel: 'Reinstate' }))) return;
+    } else {
+      const r = await promptDialog({ title: `Suspend ${data.user.name}?`, message: 'They’re logged out and can’t use Fanitt until you reinstate them.', tone: 'danger', confirmLabel: 'Suspend', input: { label: 'Reason (optional)', placeholder: 'e.g. Spam or fake profile' } });
+      if (r === null) return;
+      reason = r;
+    }
     setActing(true);
     try {
       if (data.user.isSuspended) {
         await adminApi.reinstateUser(id);
+        toast.success('User reinstated');
       } else {
-        const reason = window.prompt('Reason for suspension (optional):') || '';
         await adminApi.suspendUser(id, reason);
+        toast.success('User suspended');
       }
       load();
     } catch (err) {
@@ -270,13 +281,13 @@ export default function AdminUserDetail() {
         <div className="flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="-mt-10 flex flex-col items-center gap-4 sm:-mt-8 sm:flex-row">
             {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="" className="h-20 w-20 rounded-2xl border-4 border-white object-cover shadow-md dark:border-[#171B26]" />
+              <img src={user.avatarUrl} alt="" className="h-20 w-20 rounded-xl border-4 border-white object-cover shadow-md dark:border-[#171B26]" />
             ) : (
-              <span className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white bg-brand-gradient text-2xl font-extrabold text-white shadow-md dark:border-[#171B26]">
+              <span className="flex h-20 w-20 items-center justify-center rounded-xl border-4 border-white bg-brand-gradient text-2xl font-extrabold text-white shadow-md dark:border-[#171B26]">
                 {user.name.charAt(0).toUpperCase()}
               </span>
             )}
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:mt-10 sm:text-left">
               <h1 className="text-xl font-extrabold text-gray-900 dark:text-white">{user.name}</h1>
               <p className="text-sm text-gray-500 dark:text-white/50">{user.email}</p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -307,11 +318,12 @@ export default function AdminUserDetail() {
         <StatCard label="Referral code" value={user.referralCode || '—'} icon={Hash} accent="pink" />
       </div>
 
-      {roleProfile === null && (
-        <Card className="mt-4 flex items-center gap-3 p-4 text-sm text-gray-400 dark:text-white/40">
+      {id && <User360 userId={id} />}
+
+      {roleProfile === null && ['creator', 'brand', 'agency'].includes(user.role) && (
+        <Card className="mt-4 flex items-center gap-3 p-4 text-sm text-gray-500 dark:text-white/50">
           <AlertCircle size={16} className="shrink-0 text-amber-500" />
-          The <span className="mx-1 font-mono text-xs">/admin/users/{id}</span> response returned <span className="mx-1 font-mono text-xs">roleProfile: null</span> for
-          this user — that's a backend response, not a display issue. Check that endpoint's response in your browser's Network tab to confirm.
+          This {user.role} hasn’t set up their {user.role} profile yet, so there are no profile details to show.
         </Card>
       )}
 
@@ -389,6 +401,8 @@ export default function AdminUserDetail() {
         </Card>
       )}
 
+      {id && <UserActivityPanel userId={id} />}
+
       <Card className="mt-4 p-5">
         <h2 className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">Recent Transactions</h2>
         {transactions.length === 0 ? (
@@ -397,7 +411,7 @@ export default function AdminUserDetail() {
           <div className="mt-2 divide-y divide-gray-100 dark:divide-white/5">
             {transactions.map((t) => (
               <div key={t._id} className="flex items-center justify-between py-2.5 text-sm">
-                <span className="capitalize text-gray-600 dark:text-white/70">{t.type.replace(/_/g, ' ')}</span>
+                <span className="capitalize text-gray-600 dark:text-white/70">{t.type.replace(/_/g, ' ')} <span className="text-xs text-gray-400">· {new Date(t.createdAt).toLocaleDateString('en-IN')}</span></span>
                 <span className="font-bold text-gray-900 dark:text-white">{formatRupees(t.amount)}</span>
               </div>
             ))}

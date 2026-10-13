@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Activity, Clock, Layers, LogOut, MonitorSmartphone, RefreshCw, Trophy, Users2 } from 'lucide-react';
+import { Activity, Clock, Layers, LogOut, MonitorSmartphone, RefreshCw, Trophy, Users2 } from '@/icons';
 import { Card, EmptyState, PageHeader, StatCard, Tab, TabGroup } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { appAnalyticsApi, type AnalyticsRole, type ScreenReport } from '@/services/appAnalyticsApi';
@@ -155,7 +155,7 @@ export default function AdminAppAnalytics() {
           {/* top screen callout */}
           {data.screens[0] && (
             <Card className="flex flex-wrap items-center gap-4 p-5">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-white">
                 <Trophy size={22} />
               </span>
               <div className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ export default function AdminAppAnalytics() {
                   <AreaChart data={data.daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="dauFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#F4511E" stopOpacity={0.3} />
+                        <stop offset="0%" stopColor="#FF6A1F" stopOpacity={0.3} />
                         <stop offset="100%" stopColor="#EC2A78" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
@@ -245,7 +245,7 @@ export default function AdminAppAnalytics() {
                     <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} minTickGap={24} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} width={44} />
                     <Tooltip content={<ChartTip kind="users" />} cursor={{ stroke: '#9CA3AF', strokeDasharray: '3 3' }} />
-                    <Area type="monotone" dataKey="visitors" stroke="#EC2A78" strokeWidth={2} fill="url(#dauFill)" dot={false} activeDot={{ r: 5, fill: '#F4511E', stroke: '#fff', strokeWidth: 2 }} />
+                    <Area type="monotone" dataKey="visitors" stroke="#EC2A78" strokeWidth={2} fill="url(#dauFill)" dot={false} activeDot={{ r: 5, fill: '#FF6A1F', stroke: '#fff', strokeWidth: 2 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -263,7 +263,7 @@ export default function AdminAppAnalytics() {
                   <XAxis dataKey="hour" tickFormatter={hourLabel} tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} axisLine={false} interval={2} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} width={44} />
                   <Tooltip content={<ChartTip kind="views" />} cursor={{ fill: 'rgba(156,163,175,0.12)' }} />
-                  <Bar dataKey="views" fill="#F4511E" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="views" fill="#FF6A1F" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Card>

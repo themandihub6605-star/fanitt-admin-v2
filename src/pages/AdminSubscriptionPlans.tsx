@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Plus, Pencil, X, Layers } from 'lucide-react';
+import { Loader2, AlertCircle, Plus, Pencil, X, Layers } from '@/icons';
 import { adminApi, type AdminSubscriptionPlan } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Badge, Button, TabGroup, Tab } from '@/components/AdminUI';
@@ -245,7 +245,7 @@ export default function AdminSubscriptionPlans() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setFormOpen(false)}>
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editingId ? 'Edit Plan' : 'New Plan'}</h2>

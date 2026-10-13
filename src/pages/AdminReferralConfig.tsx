@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Percent } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Percent } from '@/icons';
 import { referralApi, type ReferralConfig } from '@/services/referralApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Button } from '@/components/AdminUI';

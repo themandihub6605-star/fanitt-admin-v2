@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { PhoneCall, PhoneOff, Video } from 'lucide-react';
-import { Badge, Button, Card, EmptyState } from '@/components/AdminUI';
+import { PhoneCall, PhoneOff, Video } from '@/icons';
+import { Badge, Button, Card, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import StoreLayout from '../StoreLayout';
 import { storeAdminApi, type CallRow, type CallStatus } from '../api';
@@ -19,7 +19,7 @@ export default function StoreCalls() {
       c.status === 'active'
         ? 'End this call now? The caller is charged only for the minutes used and gets the rest back in their wallet.'
         : 'Cancel this call request? The caller gets their money back in their wallet.';
-    if (!window.confirm(text)) return;
+    if (!(await confirmDialog({ title: c.status === 'active' ? 'End this call?' : 'Cancel this call request?', message: text, tone: 'danger', confirmLabel: c.status === 'active' ? 'End call' : 'Cancel request', cancelLabel: 'Keep it' }))) return;
     setBusyId(c._id);
     try {
       await storeAdminApi.endCall(c._id);

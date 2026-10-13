@@ -11,6 +11,7 @@
 export const colors = {
   // Brand core (from Fanitt identity) — orange -> pink gradient system
   orange: {
+    // Fanitt brand orange (matches the logo) — the panel's primary.
     50: '#FFF3EE',
     100: '#FFE1D3',
     200: '#FFC1A6',
@@ -73,8 +74,9 @@ export const colors = {
 } as const;
 
 export const typography = {
-  fontDisplay: "'Poppins', system-ui, sans-serif",
-  fontBody: "'Poppins', system-ui, sans-serif",
+  // Geist: crisp, modern UI face with tabular numbers.
+  fontDisplay: "'Geist', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+  fontBody: "'Geist', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
   scale: {
     xs: '0.75rem',
     sm: '0.875rem',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CalendarClock, Clock, EyeOff, Info, Mic, Radio, Square, Ticket, Users2, Video, XCircle } from 'lucide-react';
+import { CalendarClock, Clock, EyeOff, Info, Mic, Radio, Square, Ticket, Users2, Video, XCircle } from '@/icons';
 import { Badge, Button, Card, EmptyState, PageHeader, Tab, TabGroup } from '@/components/AdminUI';
 import { MeetRoomViewer } from '@/components/MeetRoomViewer';
 import { getApiErrorMessage } from '@/services/apiClient';

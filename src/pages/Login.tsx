@@ -1,116 +1,148 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Activity, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, Wallet } from '@/icons';
 import { Logo } from '@/components/Logo';
+import { Button, Notice, inputClass } from '@/components/AdminUI';
 import { useAuth } from '@/hooks/useAuth';
+import { getApiErrorMessage } from '@/services/apiClient';
+import { cn } from '@/utils/cn';
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, logout, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('fanitt_admin_session_expired')) {
+        setExpired(true);
+        sessionStorage.removeItem('fanitt_admin_session_expired');
+      }
+    } catch {
+      // storage blocked
+    }
+  }, []);
+
+  // Already signed in as an admin → go straight in.
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'admin') navigate('/', { replace: true });
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setExpired(false);
     setLoading(true);
     try {
-      const user = await login(email, password);
-      if (user.role !== 'admin') {
-        setError(`${user.email} isn't an admin account.`);
+      const u = await login(email.trim(), password);
+      if (u.role !== 'admin') {
+        await logout();
+        setError(`${u.email} isn’t an admin account. Sign in with an admin account.`);
         setLoading(false);
         return;
       }
       const from = (location.state as { from?: string } | null)?.from || '/';
-      navigate(from);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign-in failed — check your email and password');
+      setError(getApiErrorMessage(err) || 'Sign-in failed — check your email and password');
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0A0A0A] px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl"
-      >
-        <div className="text-center">
-          <Logo className="mx-auto h-9 w-auto" />
-          <p className="mt-2 text-sm font-semibold text-white/50">Super Admin Panel</p>
-          <h1 className="mt-6 text-xl font-bold text-white">Sign in to continue</h1>
-          <p className="mt-1 text-sm text-white/50">Admin accounts only.</p>
+    <div className="grid min-h-screen bg-[#F7F8FA] lg:grid-cols-[1fr_480px] dark:bg-[#0B0D12]">
+      {/* Brand side */}
+      <div className="relative hidden overflow-hidden bg-gray-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="pointer-events-none absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-orange-500/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 right-0 h-[480px] w-[480px] rounded-full bg-pink-500/20 blur-3xl" />
+        <Logo className="relative h-9 w-auto" />
+        <div className="relative max-w-md">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight">Run all of Fanitt from one place.</h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/60">Approvals, payouts, content, campaigns, the store and system health — with every admin action recorded.</p>
+          <div className="mt-8 space-y-3">
+            {[
+              { icon: Activity, text: 'Live activity across the app and website' },
+              { icon: Wallet, text: 'Payouts, escrow and disputes in one queue' },
+              { icon: Sparkles, text: 'Every change logged in the audit trail' },
+            ].map((f) => (
+              <div key={f.text} className="flex items-center gap-3 text-sm text-white/80">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                  <f.icon size={15} />
+                </span>
+                {f.text}
+              </div>
+            ))}
+          </div>
         </div>
+        <p className="relative text-xs text-white/35">© {new Date().getFullYear()} Fanitt · Admin access only</p>
+      </div>
 
-        {error && (
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-red-400">
-            <AlertCircle size={13} className="shrink-0" /> {error}
+      {/* Form side */}
+      <div className="flex items-center justify-center px-6 py-12">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="w-full max-w-sm">
+          <Logo className="h-8 w-auto lg:hidden" />
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-gray-950 dark:text-white lg:mt-0">Sign in to the admin panel</h1>
+          <p className="mt-1.5 text-sm text-gray-500 dark:text-white/50">Use your Fanitt admin account.</p>
+
+          {expired && (
+            <Notice tone="info" className="mt-5">
+              Your session ended. Please sign in again.
+            </Notice>
+          )}
+          {error && (
+            <Notice tone="error" className="mt-5">
+              {error}
+            </Notice>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-[13px] font-medium text-gray-700 dark:text-white/80">Email</span>
+              <div className="relative">
+                <Mail size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@fanitt.com" className={cn(inputClass, 'h-10 pl-9')} />
+              </div>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[13px] font-medium text-gray-700 dark:text-white/80">Password</span>
+              <div className="relative">
+                <Lock size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={cn(inputClass, 'h-10 pl-9 pr-10')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-gray-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </label>
+            <Button type="submit" loading={loading} className="h-10 w-full">
+              {loading ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </form>
+
+          <p className="mt-6 flex items-center gap-1.5 text-xs text-gray-400">
+            <ShieldCheck size={13} className="text-emerald-500" /> Restricted area. Sign-ins and failed attempts are logged.
           </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5">
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold text-white/60">Email</span>
-            <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@fanitt.com"
-                className="w-full rounded-xl border border-white/10 bg-navy-800/60 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-              />
-            </div>
-          </label>
-
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold text-white/60">Password</span>
-            <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-white/10 bg-navy-800/60 py-2.5 pl-11 pr-11 text-sm text-white placeholder:text-white/30 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </label>
-
-          <motion.button
-            type="submit"
-            disabled={loading}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#FF6A1F_0%,#F9436E_60%,#EC2A78_100%)] py-3 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : 'Sign In'}
-          </motion.button>
-        </form>
-
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-[11px] font-medium text-white/35">
-          <ShieldCheck size={12} className="text-emerald-400" /> Restricted access
-        </p>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ import {
   Users2,
   X,
   XCircle,
-} from 'lucide-react';
+} from '@/icons';
 import {
   campaignAdminApi,
   type AdminCampaignRow,
@@ -25,7 +25,7 @@ import {
   type CampaignRules,
 } from '@/services/campaignAdminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) || 'https://app.fanitt.com';
@@ -89,7 +89,7 @@ export default function AdminCampaigns() {
   }, [tab, search, page]);
 
   const approve = async (c: AdminCampaignRow) => {
-    if (!window.confirm(`Approve "${c.title}"? It goes live for creators right away.`)) return;
+    if (!(await confirmDialog({ title: `Approve “${c.title}”?`, message: 'It goes live for creators right away.', confirmLabel: 'Approve' }))) return;
     setActingOn(c._id);
     try {
       await campaignAdminApi.approve(c._id);
@@ -422,7 +422,7 @@ function ReasonModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
+        className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
@@ -497,7 +497,7 @@ function DetailsModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="my-8 w-full max-w-4xl rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#171B26]"
+        className="my-8 w-full max-w-4xl rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#171B26]"
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-white/10">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">Campaign details</h2>

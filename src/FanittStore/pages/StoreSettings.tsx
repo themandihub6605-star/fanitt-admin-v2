@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, Crown, ImagePlus, Loader2, Save, Smartphone } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Crown, ImagePlus, Loader2, Save, Smartphone } from '@/icons';
 import { Badge, Button, Card } from '@/components/AdminUI';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
@@ -128,7 +128,7 @@ function AccessCard({ settings, onSaved }: { settings: Settings; onSaved: (s: Se
   return (
     <Card className="p-5">
       <div className="flex items-start gap-4">
-        <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl', on ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/60')}>
+        <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', on ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/60')}>
           <Crown size={20} />
         </span>
         <div className="min-w-0 flex-1">
@@ -275,7 +275,7 @@ function ToolCardRow({ card, first, last, onMove, onSaved }: { card: ToolCard; f
   };
 
   return (
-    <div className={cn('rounded-2xl border p-4 transition-opacity dark:border-white/10', card.enabled ? 'border-gray-200' : 'border-dashed border-gray-200 opacity-70')}>
+    <div className={cn('rounded-xl border p-4 transition-opacity dark:border-white/10', card.enabled ? 'border-gray-200' : 'border-dashed border-gray-200 opacity-70')}>
       <div className="flex flex-wrap gap-4">
         <div className="relative h-24 w-36 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-orange-500/20 to-pink-500/20">
           {card.imageUrl && <img src={card.imageUrl} alt="" className="h-full w-full object-cover" />}
@@ -385,7 +385,7 @@ function BannerCard({ banner, onSaved }: { banner: WebBanner; onSaved: (b: WebBa
           <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">
             <Smartphone size={13} /> Preview
           </p>
-          <div className="relative overflow-hidden rounded-2xl bg-[#0A0A0A]">
+          <div className="relative overflow-hidden rounded-xl bg-[#0A0A0A]">
             {form.imageUrl ? (
               <img src={form.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
             ) : (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Plus, Trash2, RotateCcw, Tag } from 'lucide-react';
+import { Loader2, AlertCircle, Plus, Trash2, RotateCcw, Tag } from '@/icons';
 import { adminApi, type AdminCategory } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { cn } from '@/utils/cn';
@@ -121,7 +121,7 @@ export default function AdminCategories() {
             <div
               key={cat._id}
               className={cn(
-                'flex items-center justify-between gap-3 rounded-2xl border p-4',
+                'flex items-center justify-between gap-3 rounded-xl border p-4',
                 cat.isActive
                   ? 'border-gray-100 bg-white shadow-[0_2px_10px_rgba(16,24,40,0.04)] dark:border-white/10 dark:bg-[#171B26]'
                   : 'border-dashed border-gray-200 bg-gray-50/50 opacity-60 dark:border-white/10 dark:bg-white/[0.02]'

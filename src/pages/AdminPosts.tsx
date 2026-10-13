@@ -7,6 +7,8 @@ import {
   ExternalLink,
   FileText,
   Heart,
+  LayoutGrid,
+  Rows2,
   Image as ImageIcon,
   Loader2,
   Megaphone,
@@ -18,10 +20,10 @@ import {
   Trash2,
   Users2,
   X,
-} from 'lucide-react';
+} from '@/icons';
 import { postAdminApi, type AdminPost, type AdminPostType } from '@/services/postAdminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState, confirmDialog } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) || 'https://app.fanitt.com';
@@ -51,6 +53,21 @@ export default function AdminPosts() {
   const [error, setError] = useState('');
   const [actingOn, setActingOn] = useState<string | null>(null);
   const [editing, setEditing] = useState<AdminPost | null>(null);
+  const [view, setView] = useState<'grid' | 'list'>(() => {
+    try {
+      return localStorage.getItem('fanitt-admin-posts-view') === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+  const changeView = (v: 'grid' | 'list') => {
+    setView(v);
+    try {
+      localStorage.setItem('fanitt-admin-posts-view', v);
+    } catch {
+      // not remembered
+    }
+  };
 
   useEffect(() => {
     const handle = window.setTimeout(
@@ -74,7 +91,7 @@ export default function AdminPosts() {
 
   const remove = async (post: AdminPost) => {
     const extra = post.type === 'community' && post.commentCount > 0 ? ` Its ${post.commentCount} comment(s) will be removed too.` : '';
-    if (!window.confirm(`Delete this post by ${post.author?.name || 'this user'}? This can't be undone.${extra}`)) return;
+    if (!(await confirmDialog({ title: `Delete this post by ${post.author?.name || 'this user'}?`, message: `This can’t be undone.${extra}`, tone: 'danger', confirmLabel: 'Delete post' }))) return;
     setActingOn(post._id);
     setError('');
     try {
@@ -99,6 +116,7 @@ export default function AdminPosts() {
         {TABS.map((t) => (
           <Tab
             key={t.key}
+            groupId="posts-type"
             active={type === t.key}
             onClick={() => {
               setType(t.key);
@@ -110,7 +128,8 @@ export default function AdminPosts() {
         ))}
       </TabGroup>
 
-      <div className="relative mt-4 max-w-xl">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="relative min-w-[240px] max-w-xl flex-1">
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40" />
         <input
           value={search}
@@ -133,6 +152,16 @@ export default function AdminPosts() {
           </button>
         )}
       </div>
+      <TabGroup>
+        <Tab groupId="posts-view" active={view === 'grid'} onClick={() => changeView('grid')}>
+          <LayoutGrid size={14} /> Grid
+        </Tab>
+        <Tab groupId="posts-view" active={view === 'list'} onClick={() => changeView('list')}>
+          <Rows2 size={14} /> List
+        </Tab>
+      </TabGroup>
+      <span className="text-xs text-gray-400">{total.toLocaleString('en-IN')} posts</span>
+      </div>
 
       {error && (
         <div className="mt-5 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
@@ -147,7 +176,79 @@ export default function AdminPosts() {
         </div>
       ) : (
         <>
-          <div className="mt-6 space-y-3">
+          {view === 'grid' && posts.length > 0 && (
+            <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {posts.map((post) => {
+                const link = viewLink(post);
+                const first = post.media[0];
+                return (
+                  <div key={post._id} className="rise lift group overflow-hidden rounded-xl border border-gray-200/70 bg-white dark:border-white/[0.07] dark:bg-[#12161f]">
+                    <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-white/[0.04]">
+                      {first ? (
+                        first.type === 'video' ? (
+                          <video src={first.url} muted preload="metadata" className="h-full w-full object-cover" />
+                        ) : (
+                          <img src={first.url} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
+                        )
+                      ) : (
+                        <div className="flex h-full w-full items-center bg-gradient-to-br from-orange-500/15 via-fuchsia-500/10 to-sky-500/10 p-4">
+                          <p className="line-clamp-6 text-sm font-medium text-gray-700 dark:text-white/80">{post.text || 'No text'}</p>
+                        </div>
+                      )}
+                      {first?.type === 'video' && (
+                        <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur">
+                          <PlayCircle size={20} />
+                        </span>
+                      )}
+                      {post.media.length > 1 && <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white">1/{post.media.length}</span>}
+                      <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/70 to-transparent px-3 pb-2 pt-8 text-xs font-semibold text-white">
+                        <span className="flex items-center gap-1">
+                          <Heart size={12} /> {post.likeCount}
+                        </span>
+                        {post.type === 'community' && (
+                          <span className="flex items-center gap-1">
+                            <MessageCircle size={12} /> {post.commentCount}
+                          </span>
+                        )}
+                        {post.isPinned && <Pin size={12} />}
+                      </div>
+                      <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                        <button onClick={() => setEditing(post)} aria-label="Edit post" className="rounded-lg bg-white/90 p-1.5 text-gray-700 shadow hover:bg-white">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => remove(post)} disabled={actingOn === post._id} aria-label="Delete post" className="rounded-lg bg-white/90 p-1.5 text-rose-600 shadow hover:bg-white">
+                          {actingOn === post._id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-center gap-2">
+                        {post.author?.avatarUrl ? (
+                          <img src={post.author.avatarUrl} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-[10px] font-bold text-orange-600 dark:bg-orange-500/15 dark:text-orange-300">
+                            {(post.author?.name || '?').trim()[0]?.toUpperCase()}
+                          </span>
+                        )}
+                        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-900 dark:text-white">{post.author?.name || 'Deleted user'}</p>
+                        {link && (
+                          <a href={link} target="_blank" rel="noreferrer" aria-label="Open on Fanitt" className="text-gray-400 hover:text-orange-600">
+                            <ExternalLink size={13} />
+                          </a>
+                        )}
+                      </div>
+                      {first && post.text && <p className="mt-1.5 line-clamp-2 text-xs text-gray-600 dark:text-white/60">{post.text}</p>}
+                      <p className="mt-1.5 text-[11px] text-gray-400">
+                        {post.community ? `${post.community.name} · ` : ''}
+                        {formatDateTime(post.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className={view === 'grid' && posts.length > 0 ? 'hidden' : 'mt-6 space-y-3'}>
             {posts.length === 0 && <EmptyState icon={FileText} message={search ? 'No posts match your search.' : 'No posts yet.'} />}
 
             {posts.map((post) => {
@@ -328,7 +429,7 @@ function EditPostModal({ post, onClose, onSaved }: { post: AdminPost; onClose: (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#171B26]"
       >
         <div className="flex items-center justify-between">
           <div>

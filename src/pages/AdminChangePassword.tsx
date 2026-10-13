@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Lock, Eye, EyeOff } from '@/icons';
 import { adminApi } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Button } from '@/components/AdminUI';
