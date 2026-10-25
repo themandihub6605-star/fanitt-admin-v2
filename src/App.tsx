@@ -1,3 +1,4 @@
+// File: src/App.tsx  (fanitt-admin)
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -42,6 +43,7 @@ const AdminHomeLayout = lazy(() => import('@/pages/AdminHomeLayout'));
 const AdminMeets = lazy(() => import('@/pages/AdminMeets'));
 const AdminAppAnalytics = lazy(() => import('@/pages/AdminAppAnalytics'));
 const AdminAccountDeletions = lazy(() => import('@/pages/AdminAccountDeletions'));
+const AdminContactMessages = lazy(() => import('@/pages/AdminContactMessages'));
 const AdminHomeBanners = lazy(() => import('@/pages/AdminHomeBanners'));
 const AdminActivity = lazy(() => import('@/pages/AdminActivity'));
 const AdminLeaderboards = lazy(() => import('@/pages/insights/AdminLeaderboards'));
@@ -168,6 +170,7 @@ function AppRoutes() {
         <Route path="/live-sessions" element={<AdminMeets />} />
         <Route path="/home-banners" element={<AdminHomeBanners />} />
         <Route path="/account-deletions" element={<AdminAccountDeletions />} />
+        <Route path="/contact-messages" element={<AdminContactMessages />} />
         <Route path="/app-analytics" element={<AdminAppAnalytics />} />
         <Route path="/activity" element={<AdminActivity />} />
         <Route path="/insights/leaderboards" element={<AdminLeaderboards />} />

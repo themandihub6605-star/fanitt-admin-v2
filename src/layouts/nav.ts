@@ -1,3 +1,4 @@
+// File: src/layouts/nav.ts  (fanitt-admin)
 import {
   Activity,
   BadgeCheck,
@@ -36,6 +37,7 @@ import {
   Users2,
   UsersRound,
   UserX,
+  Inbox,
   Video,
   Wallet,
   type LucideIcon,
@@ -84,6 +86,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/applications', label: 'Applications', icon: Briefcase, hint: 'Creator pitches on brand campaigns', keywords: 'apply pitch proposal creator campaign' },
       { href: '/escrow-disputes', label: 'Payment disputes', icon: ShieldAlert, hint: 'Release or refund disputed escrow money', keywords: 'escrow refund dispute', badge: 'disputes' },
       { href: '/account-deletions', label: 'Account deletions', icon: UserX, hint: 'Users who asked to delete their account', keywords: 'delete remove', badge: 'deletions' },
+      { href: '/contact-messages', label: 'Contact messages', icon: Inbox, hint: 'Messages from the website contact form', keywords: 'contact enquiry support website message' },
     ],
   },
   {
