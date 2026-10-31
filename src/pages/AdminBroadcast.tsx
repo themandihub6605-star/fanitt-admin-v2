@@ -20,7 +20,7 @@ import {
   X,
   XCircle,
   Zap,
-} from 'lucide-react';
+} from '@/icons';
 import {
   notificationAdminApi,
   EMPTY_FILTERS,
