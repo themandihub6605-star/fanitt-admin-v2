@@ -17,6 +17,7 @@ import {
   Trophy,
   ClipboardCheck,
   FileText,
+  Flag,
   HeartPulse,
   History,
   Images,
@@ -43,7 +44,7 @@ import {
   type LucideIcon,
 } from '@/icons';
 
-export type BadgeKey = 'verifications' | 'withdrawals' | 'deletions' | 'campaigns' | 'disputes' | 'store-kyc' | 'reviews' | 'api';
+export type BadgeKey = 'reports' | 'verifications' | 'withdrawals' | 'deletions' | 'campaigns' | 'disputes' | 'store-kyc' | 'reviews' | 'api';
 
 export type NavItem = {
   href: string;
@@ -80,8 +81,10 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Action center',
     items: [
+      { href: '/reports', label: 'Reports', icon: Flag, hint: 'Content and accounts users reported — review within 24 hours', keywords: 'report flag abuse spam moderation block ugc', badge: 'reports' },
       { href: '/verifications', label: 'Profile approvals', icon: BadgeCheck, hint: 'Approve or reject creator & brand profiles', keywords: 'verification verify pending kyc', badge: 'verifications' },
       { href: '/withdrawals', label: 'Withdrawals', icon: Wallet, hint: 'Pay out creator earnings', keywords: 'payout money bank upi', badge: 'withdrawals' },
+      { href: '/billing', label: 'Billing & GST', icon: Receipt, hint: 'GST, platform fee per plan, minimum withdrawal, invoices, agreements', keywords: 'gst tax fee commission invoice agreement minimum withdrawal plan lite pro' },
       { href: '/campaigns', label: 'Campaign review', icon: ClipboardCheck, hint: 'Approve, reject or unpublish brand campaigns', keywords: 'brand campaign approve', badge: 'campaigns' },
       { href: '/applications', label: 'Applications', icon: Briefcase, hint: 'Creator pitches on brand campaigns', keywords: 'apply pitch proposal creator campaign' },
       { href: '/escrow-disputes', label: 'Payment disputes', icon: ShieldAlert, hint: 'Release or refund disputed escrow money', keywords: 'escrow refund dispute', badge: 'disputes' },

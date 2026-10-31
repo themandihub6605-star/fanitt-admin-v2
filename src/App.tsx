@@ -29,6 +29,7 @@ const AdminWallets = lazy(() => import('@/pages/manage/AdminWallets'));
 const AdminCommunityContent = lazy(() => import('@/pages/manage/AdminCommunityContent'));
 const AdminLegal = lazy(() => import('@/pages/manage/AdminLegal'));
 const AdminWithdrawals = lazy(() => import('@/pages/AdminWithdrawals'));
+const AdminBilling = lazy(() => import('@/pages/AdminBilling'));
 const AdminBroadcast = lazy(() => import('@/pages/AdminBroadcast'));
 const AdminSiteSettings = lazy(() => import('@/pages/AdminSiteSettings'));
 const AdminUserDetail = lazy(() => import('@/pages/AdminUserDetail'));
@@ -43,6 +44,7 @@ const AdminHomeLayout = lazy(() => import('@/pages/AdminHomeLayout'));
 const AdminMeets = lazy(() => import('@/pages/AdminMeets'));
 const AdminAppAnalytics = lazy(() => import('@/pages/AdminAppAnalytics'));
 const AdminAccountDeletions = lazy(() => import('@/pages/AdminAccountDeletions'));
+const AdminReports = lazy(() => import('@/pages/AdminReports'));
 const AdminContactMessages = lazy(() => import('@/pages/AdminContactMessages'));
 const AdminHomeBanners = lazy(() => import('@/pages/AdminHomeBanners'));
 const AdminActivity = lazy(() => import('@/pages/AdminActivity'));
@@ -157,6 +159,7 @@ function AppRoutes() {
         <Route path="/community-content" element={<AdminCommunityContent />} />
         <Route path="/legal" element={<AdminLegal />} />
         <Route path="/withdrawals" element={<AdminWithdrawals />} />
+        <Route path="/billing" element={<AdminBilling />} />
         <Route path="/broadcast" element={<AdminBroadcast />} />
         <Route path="/settings" element={<AdminSiteSettings />} />
         <Route path="/admins" element={<AdminAdmins />} />
@@ -170,6 +173,7 @@ function AppRoutes() {
         <Route path="/live-sessions" element={<AdminMeets />} />
         <Route path="/home-banners" element={<AdminHomeBanners />} />
         <Route path="/account-deletions" element={<AdminAccountDeletions />} />
+        <Route path="/reports" element={<AdminReports />} />
         <Route path="/contact-messages" element={<AdminContactMessages />} />
         <Route path="/app-analytics" element={<AdminAppAnalytics />} />
         <Route path="/activity" element={<AdminActivity />} />

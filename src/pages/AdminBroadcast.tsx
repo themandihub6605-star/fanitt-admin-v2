@@ -10,22 +10,28 @@ import {
   Link2,
   Loader2,
   Megaphone,
+  RotateCcw,
   Send,
+  SlidersHorizontal,
+  Sparkles,
   Smartphone,
   TestTube2,
   Users2,
   X,
   XCircle,
   Zap,
-} from '@/icons';
+} from 'lucide-react';
 import {
   notificationAdminApi,
+  EMPTY_FILTERS,
+  type AudienceFilters,
+  type AudiencePlan,
   type AudienceRole,
   type Broadcast,
   type BroadcastStatus,
 } from '@/services/notificationAdminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState, confirmDialog } from '@/components/AdminUI';
+import { PageHeader, Card, Badge, Button, TabGroup, Tab, EmptyState } from '@/components/AdminUI';
 import { cn } from '@/utils/cn';
 
 const ROLE_OPTIONS: { value: AudienceRole; label: string }[] = [
@@ -34,6 +40,152 @@ const ROLE_OPTIONS: { value: AudienceRole; label: string }[] = [
   { value: 'agency', label: 'Agencies' },
   { value: 'fan', label: 'Fans' },
 ];
+
+const PLAN_ROLES: AudienceRole[] = ['creator', 'brand'];
+const PROFILE_ROLES: AudienceRole[] = ['creator', 'brand', 'agency'];
+
+const PLAN_OPTIONS: { value: AudienceFilters['plan']; label: string }[] = [
+  { value: 'any', label: 'Any plan' },
+  { value: 'free', label: 'Free plan (not subscribed)' },
+  { value: 'paid', label: 'Paid plan' },
+  { value: 'expiring', label: 'Paid, ending in 7 days' },
+  { value: 'plans', label: 'Specific plans' },
+];
+
+const VERIFICATION_OPTIONS: { value: AudienceFilters['verification']; label: string }[] = [
+  { value: 'any', label: 'Any' },
+  { value: 'verified', label: 'Verified' },
+  { value: 'unverified', label: 'Not verified' },
+  { value: 'pending', label: 'Pending review' },
+  { value: 'rejected', label: 'Rejected' },
+];
+
+const YES_NO_OPTIONS = (yes: string, no: string): { value: AudienceFilters['onboarded']; label: string }[] => [
+  { value: 'any', label: 'Any' },
+  { value: 'yes', label: yes },
+  { value: 'no', label: no },
+];
+
+/** Login activity is one choice that maps to loginWithinDays / inactiveDays. */
+const ACTIVITY_OPTIONS = [
+  { key: 'any', label: 'Any', login: null, inactive: null },
+  { key: 'a7', label: 'Logged in last 7 days', login: 7, inactive: null },
+  { key: 'a30', label: 'Logged in last 30 days', login: 30, inactive: null },
+  { key: 'i30', label: 'Not seen 30+ days', login: null, inactive: 30 },
+  { key: 'i90', label: 'Not seen 90+ days', login: null, inactive: 90 },
+] as const;
+
+const JOINED_OPTIONS = [
+  { value: null, label: 'Any time' },
+  { value: 1, label: 'Last 24 hours' },
+  { value: 7, label: 'Last 7 days' },
+  { value: 30, label: 'Last 30 days' },
+] as const;
+
+/** One-tap audiences for the most common campaigns. */
+const PRESETS: { label: string; roles: AudienceRole[]; filters: Partial<AudienceFilters> }[] = [
+  { label: 'Creators on free plan', roles: ['creator'], filters: { plan: 'free' } },
+  { label: 'Brands on free plan', roles: ['brand'], filters: { plan: 'free' } },
+  { label: 'Paid users', roles: [], filters: { plan: 'paid' } },
+  { label: 'Plan ending soon', roles: [], filters: { plan: 'expiring' } },
+  { label: 'Not verified yet', roles: ['creator', 'brand'], filters: { verification: 'unverified' } },
+  { label: "Didn't finish signup", roles: [], filters: { onboarded: 'no' } },
+  { label: 'New this week', roles: [], filters: { joinedWithinDays: 7 } },
+  { label: 'Not seen in 30 days', roles: [], filters: { inactiveDays: 30 } },
+];
+
+function withDefaults(f?: Partial<AudienceFilters> | null): AudienceFilters {
+  return { ...EMPTY_FILTERS, ...(f || {}), planIds: (f?.planIds || []).map(String) };
+}
+
+function activeFilterCount(f: AudienceFilters) {
+  return [
+    f.plan !== 'any',
+    f.verification !== 'any',
+    f.onboarded !== 'any',
+    f.emailVerified !== 'any',
+    !!(f.loginWithinDays || f.inactiveDays),
+    !!f.joinedWithinDays,
+    f.appOnly,
+  ].filter(Boolean).length;
+}
+
+function rupees(paise: number) {
+  return paise > 0 ? `₹${(paise / 100).toLocaleString('en-IN')}` : 'Free';
+}
+
+/** Short plain-English description of the filters, e.g. "free plan · verified · new in 7 days". */
+function describeFilters(f: AudienceFilters, plans: AudiencePlan[]) {
+  const parts: string[] = [];
+  if (f.plan === 'free') parts.push('free plan');
+  if (f.plan === 'paid') parts.push('paid plan');
+  if (f.plan === 'expiring') parts.push('paid plan ending in 7 days');
+  if (f.plan === 'plans') {
+    const names = plans.filter((p) => f.planIds.includes(p._id)).map((p) => `${p.appliesTo} ${p.name}`);
+    parts.push(names.length ? `plan: ${names.join(', ')}` : `${f.planIds.length} plan(s)`);
+  }
+  if (f.verification !== 'any') parts.push(VERIFICATION_OPTIONS.find((o) => o.value === f.verification)!.label.toLowerCase());
+  if (f.onboarded === 'yes') parts.push('finished signup');
+  if (f.onboarded === 'no') parts.push("didn't finish signup");
+  if (f.emailVerified === 'yes') parts.push('email verified');
+  if (f.emailVerified === 'no') parts.push('email not verified');
+  if (f.loginWithinDays) parts.push(`logged in last ${f.loginWithinDays} days`);
+  if (f.inactiveDays) parts.push(`not seen ${f.inactiveDays}+ days`);
+  if (f.joinedWithinDays) parts.push(f.joinedWithinDays === 1 ? 'joined today' : `joined last ${f.joinedWithinDays} days`);
+  if (f.appOnly) parts.push('app users');
+  return parts.join(' · ');
+}
+
+/** Roles that actually get the notification once filters are applied. */
+function effectiveRoles(roles: AudienceRole[], f: AudienceFilters, plans: AudiencePlan[]): AudienceRole[] {
+  let list: AudienceRole[] = roles.length ? roles : ROLE_OPTIONS.map((r) => r.value);
+  if (f.plan !== 'any') list = list.filter((r) => PLAN_ROLES.includes(r));
+  if (f.plan === 'plans') list = list.filter((r) => plans.some((p) => f.planIds.includes(p._id) && p.appliesTo === r));
+  if (f.verification !== 'any') list = list.filter((r) => PROFILE_ROLES.includes(r));
+  return list;
+}
+
+function OptionChips<T extends string | number | null>({
+  options,
+  value,
+  onChange,
+}: {
+  options: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={cn(
+            'rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors',
+            value === o.value
+              ? 'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-500/40 dark:bg-orange-500/10 dark:text-orange-300'
+              : 'border-gray-200 text-gray-600 hover:border-gray-300 dark:border-white/10 dark:text-white/60'
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FilterRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1.5 sm:grid-cols-[130px_1fr] sm:items-start">
+      <span className="pt-1 text-xs font-bold text-gray-700 dark:text-white/80">{label}</span>
+      <div>
+        {children}
+        {hint && <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">{hint}</p>}
+      </div>
+    </div>
+  );
+}
 
 const LINK_PRESETS = [
   { label: 'Communities', value: '/communities' },
@@ -86,6 +238,10 @@ export default function AdminBroadcast() {
   const [imageUrl, setImageUrl] = useState('');
   const [scheduleMode, setScheduleMode] = useState(false);
   const [scheduledAt, setScheduledAt] = useState(() => toLocalInput(new Date(Date.now() + 60 * 60 * 1000)));
+  const [filters, setFilters] = useState<AudienceFilters>(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
+  const [plans, setPlans] = useState<AudiencePlan[]>([]);
+  const [byRole, setByRole] = useState<Partial<Record<AudienceRole, number>>>({});
   const [audience, setAudience] = useState<number | null>(null);
   const [countingAudience, setCountingAudience] = useState(false);
   const [sending, setSending] = useState(false);
@@ -105,22 +261,37 @@ export default function AdminBroadcast() {
     if (image && imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
   }, [image, imagePreview]);
 
+  // Plans for the "Specific plans" filter
+  useEffect(() => {
+    notificationAdminApi
+      .plans()
+      .then((list) => setPlans(list.filter((p) => p.appliesTo === 'creator' || p.appliesTo === 'brand')))
+      .catch(() => setPlans([]));
+  }, []);
+
   // Live audience count
   useEffect(() => {
     if (testMode && !testEmail.includes('@')) {
       setAudience(null);
+      setByRole({});
       return;
     }
     const handle = window.setTimeout(() => {
       setCountingAudience(true);
       notificationAdminApi
-        .audience(testMode ? [] : roles, testMode ? testEmail.trim() : undefined)
-        .then(setAudience)
-        .catch(() => setAudience(null))
+        .audience(testMode ? [] : roles, filters, testMode ? testEmail.trim() : undefined)
+        .then((res) => {
+          setAudience(res.count);
+          setByRole(res.byRole);
+        })
+        .catch(() => {
+          setAudience(null);
+          setByRole({});
+        })
         .finally(() => setCountingAudience(false));
     }, 300);
     return () => window.clearTimeout(handle);
-  }, [roles, testMode, testEmail]);
+  }, [roles, filters, testMode, testEmail]);
 
   const loadHistory = (quiet = false) => {
     if (!quiet) setHistoryLoading(true);
@@ -148,11 +319,41 @@ export default function AdminBroadcast() {
   const toggleRole = (role: AudienceRole) =>
     setRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
 
+  const setFilter = <K extends keyof AudienceFilters>(key: K, value: AudienceFilters[K]) =>
+    setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const togglePlan = (id: string) =>
+    setFilters((prev) => ({
+      ...prev,
+      planIds: prev.planIds.includes(id) ? prev.planIds.filter((x) => x !== id) : [...prev.planIds, id],
+    }));
+
+  const applyPreset = (p: (typeof PRESETS)[number]) => {
+    setTestMode(false);
+    setRoles(p.roles);
+    setFilters({ ...EMPTY_FILTERS, ...p.filters });
+    setShowFilters(true);
+  };
+
+  const filterCount = activeFilterCount(filters);
+  const filterText = describeFilters(filters, plans);
+  const finalRoles = effectiveRoles(roles, filters, plans);
+  const droppedRoles = (roles.length ? roles : ROLE_OPTIONS.map((r) => r.value)).filter((r) => !finalRoles.includes(r));
+  const showPlanFilter = roles.length === 0 || roles.some((r) => PLAN_ROLES.includes(r));
+  const showVerification = roles.length === 0 || roles.some((r) => PROFILE_ROLES.includes(r));
+  const visiblePlans = plans.filter((p) => (roles.length ? roles.includes(p.appliesTo) : true));
+  const activityKey =
+    ACTIVITY_OPTIONS.find((o) => o.login === filters.loginWithinDays && o.inactive === filters.inactiveDays)?.key ?? 'any';
+
+  const rolesText =
+    roles.length === 0 && filterCount === 0
+      ? 'Everyone'
+      : ROLE_OPTIONS.filter((r) => finalRoles.includes(r.value)).map((r) => r.label).join(', ') || 'Nobody';
   const audienceLabel = testMode
     ? testEmail.trim() || 'one test account'
-    : roles.length === 0
-      ? 'Everyone'
-      : ROLE_OPTIONS.filter((r) => roles.includes(r.value)).map((r) => r.label).join(', ');
+    : filterText
+      ? `${rolesText} · ${filterText}`
+      : rolesText;
 
   const resetComposer = () => {
     setTitle('');
@@ -189,7 +390,7 @@ export default function AdminBroadcast() {
     const confirmText = scheduleMode
       ? `Schedule this notification for ${audienceLabel} (${count} users) on ${formatDateTime(scheduleIso)}?`
       : `Send this notification now to ${audienceLabel} (${count} users)? This can't be undone.`;
-    if (!(await confirmDialog({ title: scheduleMode ? 'Schedule this notification?' : 'Send this notification now?', message: confirmText, confirmLabel: scheduleMode ? 'Schedule' : 'Send now' }))) return;
+    if (!window.confirm(confirmText)) return;
 
     setSending(true);
     try {
@@ -197,6 +398,7 @@ export default function AdminBroadcast() {
         title: title.trim(),
         message: message.trim(),
         roles: testMode ? [] : roles,
+        filters: testMode ? undefined : filters,
         testEmail: testMode ? testEmail.trim() : undefined,
         link: link.trim() || undefined,
         image,
@@ -230,13 +432,16 @@ export default function AdminBroadcast() {
     } else {
       setTestMode(false);
       setRoles(b.roles);
+      const restored = withDefaults(b.filters);
+      setFilters(restored);
+      setShowFilters(activeFilterCount(restored) > 0);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const act = async (b: Broadcast, action: 'cancel' | 'sendNow') => {
     const text = action === 'cancel' ? 'Cancel this scheduled notification?' : 'Send this notification right now?';
-    if (!(await confirmDialog({ title: text, tone: action === 'cancel' ? 'danger' : 'default', confirmLabel: action === 'cancel' ? 'Cancel notification' : 'Send now', cancelLabel: 'Keep it' }))) return;
+    if (!window.confirm(text)) return;
     setActingOn(b._id);
     try {
       const updated = action === 'cancel' ? await notificationAdminApi.cancel(b._id) : await notificationAdminApi.sendNow(b._id);
@@ -344,6 +549,154 @@ export default function AdminBroadcast() {
                   ))}
                 </div>
               )}
+              {!testMode && (
+                <div className="mt-3 rounded-xl border border-gray-200 dark:border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters((v) => !v)}
+                    className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left"
+                  >
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-gray-800 dark:text-white">
+                      <SlidersHorizontal size={13} /> Narrow down
+                      {filterCount > 0 && (
+                        <span className="rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-black leading-none text-white">{filterCount}</span>
+                      )}
+                    </span>
+                    <span className="truncate text-[11px] text-gray-400 dark:text-white/40">
+                      {filterCount ? filterText : 'Plan, verification, activity, join date…'}
+                    </span>
+                  </button>
+
+                  {showFilters && (
+                    <div className="space-y-3.5 border-t border-gray-200 px-3.5 py-3.5 dark:border-white/10">
+                      {/* Presets */}
+                      <div>
+                        <p className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">
+                          <Sparkles size={11} /> Quick audiences
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {PRESETS.map((p) => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => applyPreset(p)}
+                              className="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-200 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {showPlanFilter && (
+                        <FilterRow label="Subscription" hint="Only creators and brands have plans — fans and agencies are left out when this is set.">
+                          <OptionChips options={PLAN_OPTIONS} value={filters.plan} onChange={(v) => setFilter('plan', v)} />
+                          {filters.plan === 'plans' && (
+                            <div className="mt-2 space-y-2">
+                              {(['creator', 'brand'] as const)
+                                .filter((r) => visiblePlans.some((p) => p.appliesTo === r))
+                                .map((r) => (
+                                  <div key={r}>
+                                    <p className="mb-1 text-[11px] font-semibold capitalize text-gray-500 dark:text-white/50">{r} plans</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {visiblePlans
+                                        .filter((p) => p.appliesTo === r)
+                                        .map((p) => (
+                                          <button
+                                            key={p._id}
+                                            type="button"
+                                            onClick={() => togglePlan(p._id)}
+                                            className={cn(
+                                              'rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors',
+                                              filters.planIds.includes(p._id)
+                                                ? 'border-orange-400 bg-orange-500 text-white'
+                                                : 'border-gray-200 text-gray-600 hover:border-orange-300 dark:border-white/10 dark:text-white/70',
+                                              !p.isActive && 'opacity-60'
+                                            )}
+                                          >
+                                            {p.name} · {rupees(p.price)}
+                                            {p.price > 0 && p.billingCycle ? `/${p.billingCycle.replace('ly', '')}` : ''}
+                                            {!p.isActive ? ' (retired)' : ''}
+                                          </button>
+                                        ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              {visiblePlans.length === 0 && <p className="text-[11px] text-gray-400">No plans found for the selected roles.</p>}
+                              {filters.planIds.length === 0 && visiblePlans.length > 0 && (
+                                <p className="text-[11px] text-amber-600 dark:text-amber-300">Pick at least one plan.</p>
+                              )}
+                            </div>
+                          )}
+                        </FilterRow>
+                      )}
+
+                      {showVerification && (
+                        <FilterRow label="Verification" hint="Creator, brand and agency profiles only.">
+                          <OptionChips options={VERIFICATION_OPTIONS} value={filters.verification} onChange={(v) => setFilter('verification', v)} />
+                        </FilterRow>
+                      )}
+
+                      <FilterRow label="Signup">
+                        <OptionChips options={YES_NO_OPTIONS('Finished', "Didn't finish")} value={filters.onboarded} onChange={(v) => setFilter('onboarded', v)} />
+                      </FilterRow>
+
+                      <FilterRow label="Email">
+                        <OptionChips options={YES_NO_OPTIONS('Verified', 'Not verified')} value={filters.emailVerified} onChange={(v) => setFilter('emailVerified', v)} />
+                      </FilterRow>
+
+                      <FilterRow label="Activity" hint="Based on the last time they logged in.">
+                        <OptionChips
+                          options={ACTIVITY_OPTIONS.map((o) => ({ value: o.key as string, label: o.label }))}
+                          value={activityKey}
+                          onChange={(key) => {
+                            const o = ACTIVITY_OPTIONS.find((x) => x.key === key)!;
+                            setFilters((prev) => ({ ...prev, loginWithinDays: o.login, inactiveDays: o.inactive }));
+                          }}
+                        />
+                      </FilterRow>
+
+                      <FilterRow label="Joined">
+                        <OptionChips
+                          options={JOINED_OPTIONS as unknown as { value: number | null; label: string }[]}
+                          value={filters.joinedWithinDays}
+                          onChange={(v) => setFilter('joinedWithinDays', v)}
+                        />
+                      </FilterRow>
+
+                      <FilterRow label="Device">
+                        <label className="flex w-fit cursor-pointer items-center gap-2 text-[11px] font-semibold text-gray-600 dark:text-white/70">
+                          <input
+                            type="checkbox"
+                            checked={filters.appOnly}
+                            onChange={(e) => setFilter('appOnly', e.target.checked)}
+                            className="h-3.5 w-3.5 accent-orange-500"
+                          />
+                          Only people with the app and push turned on
+                        </label>
+                      </FilterRow>
+
+                      {droppedRoles.length > 0 && (roles.length > 0 || filterCount > 0) && (
+                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[11px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                          {ROLE_OPTIONS.filter((r) => droppedRoles.includes(r.value)).map((r) => r.label).join(', ')} won't get this — these filters
+                          don't apply to them.
+                        </p>
+                      )}
+
+                      {filterCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setFilters(EMPTY_FILTERS)}
+                          className="flex items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-gray-800 dark:text-white/50 dark:hover:text-white"
+                        >
+                          <RotateCcw size={11} /> Clear filters
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-white/50">
                 <Users2 size={12} />
                 {countingAudience ? (
@@ -355,6 +708,15 @@ export default function AdminBroadcast() {
                 )}{' '}
                 {testMode ? 'account' : 'users'} will get this ({audienceLabel})
               </p>
+              {!testMode && !countingAudience && audience !== null && audience > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {ROLE_OPTIONS.filter((r) => (byRole[r.value] ?? 0) > 0).map((r) => (
+                    <span key={r.value} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-white/5 dark:text-white/60">
+                      {r.label} {(byRole[r.value] ?? 0).toLocaleString('en-IN')}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Content */}
@@ -488,7 +850,11 @@ export default function AdminBroadcast() {
               )}
             </div>
 
-            <Button type="submit" disabled={sending || !title.trim() || !message.trim()} className="w-full">
+            <Button
+              type="submit"
+              disabled={sending || !title.trim() || !message.trim() || (!testMode && audience === 0)}
+              className="w-full"
+            >
               {sending ? <Loader2 size={16} className="animate-spin" /> : scheduleMode ? <CalendarClock size={16} /> : <Send size={16} />}
               {scheduleMode ? 'Schedule notification' : testMode ? 'Send test' : 'Send notification'}
             </Button>
@@ -502,7 +868,7 @@ export default function AdminBroadcast() {
               <Smartphone size={13} /> Phone preview
             </p>
             <div className="rounded-[28px] bg-gradient-to-b from-gray-800 to-gray-900 p-3">
-              <div className="rounded-xl bg-white/95 p-3 shadow-lg dark:bg-[#23273a]">
+              <div className="rounded-2xl bg-white/95 p-3 shadow-lg dark:bg-[#23273a]">
                 <div className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-orange-500 to-pink-500 text-[10px] font-black text-white">F</span>
                   <span className="text-[11px] font-semibold text-gray-500 dark:text-white/60">Fanitt · now</span>
@@ -571,6 +937,7 @@ export default function AdminBroadcast() {
                       To{' '}
                       {b.testEmail ||
                         (b.roles.length ? ROLE_OPTIONS.filter((r) => b.roles.includes(r.value)).map((r) => r.label).join(', ') : 'Everyone')}
+                      {!b.testEmail && describeFilters(withDefaults(b.filters), plans) ? ` · ${describeFilters(withDefaults(b.filters), plans)}` : ''}
                       {b.link ? ` · opens ${b.link}` : ''}
                       {b.createdBy?.name ? ` · by ${b.createdBy.name}` : ''}
                     </p>

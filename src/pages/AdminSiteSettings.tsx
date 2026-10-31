@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Percent } from '@/icons';
+import { Link } from 'react-router-dom';
+import { Loader2, AlertCircle, CheckCircle2 } from '@/icons';
 import { adminApi, type SiteSettings } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Button } from '@/components/AdminUI';
@@ -58,24 +59,16 @@ export default function AdminSiteSettings() {
 
       {!loading && settings && (
         <Card className="mt-2 space-y-5 p-5">
-          <label className="block">
-            <span className="block text-sm font-bold text-gray-900 dark:text-white">Platform Commission</span>
-            <span className="mb-1.5 block text-xs text-gray-400 dark:text-white/40">
-              Cut taken from every session payment, donation, and campaign payout.
-            </span>
-            <div className="relative max-w-[160px]">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={0.5}
-                value={settings.platformCommissionPercent}
-                onChange={(e) => setSettings({ ...settings, platformCommissionPercent: Number(e.target.value) })}
-                className={`${inputClasses} pr-9`}
-              />
-              <Percent size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40" />
-            </div>
-          </label>
+          <div className="rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3.5 text-sm dark:border-white/10 dark:bg-white/5">
+            <p className="font-bold text-gray-900 dark:text-white">Platform fee & GST</p>
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
+              Fanitt’s fee is now taken only when a creator withdraws (fee per plan). Change it, GST and the minimum withdrawal in{' '}
+              <Link to="/billing" className="font-semibold text-orange-600 underline dark:text-orange-400">
+                Billing & GST
+              </Link>
+              .
+            </p>
+          </div>
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-bold text-gray-900 dark:text-white">Support Email</span>
