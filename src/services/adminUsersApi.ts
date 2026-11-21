@@ -12,6 +12,17 @@ export interface ProfileSummary {
   percent: number;
 }
 
+/** The plan a brand/creator is on (no subscription record = the free default plan). */
+export interface UserPlanSummary {
+  planId: string;
+  name: string;
+  slug: string;
+  billingCycle: 'monthly' | 'yearly';
+  isDefault: boolean;
+  status: 'active' | 'past_due' | 'cancelled' | 'expired';
+  currentPeriodEnd: string | null;
+}
+
 export interface UserRow {
   _id: string;
   name: string;
@@ -28,6 +39,8 @@ export interface UserRow {
   createdAt: string;
   /** null for fans and admins — they have no reviewed profile. */
   profileSummary: ProfileSummary | null;
+  /** null for fans, agencies and admins — only brands and creators have plans. */
+  plan?: UserPlanSummary | null;
 }
 
 export interface UserStats {
@@ -52,6 +65,8 @@ export interface UserListParams {
   profile?: 'incomplete' | ProfileStatus;
   joined?: 'today' | '7d' | '30d';
   provider?: 'google' | 'local';
+  /** Only users on this subscription plan. */
+  planId?: string;
   page?: number;
   limit?: number;
 }

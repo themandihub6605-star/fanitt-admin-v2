@@ -23,6 +23,7 @@ import { cn } from '@/utils/cn';
 import { Card, Badge, Button, StatCard, EmptyState, confirmDialog, promptDialog, toast } from '@/components/AdminUI';
 import { UserActivityPanel } from '@/components/UserActivityPanel';
 import { User360 } from '@/components/User360';
+import { UserPlanCard } from '@/components/UserPlanCard';
 
 function formatRupees(paise: number) {
   return `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
@@ -317,6 +318,9 @@ export default function AdminUserDetail() {
         <StatCard label="Reviews received" value={reviews.length} icon={Star} accent="amber" />
         <StatCard label="Referral code" value={user.referralCode || '—'} icon={Hash} accent="pink" />
       </div>
+
+      {/* Brand / creator plan — see it and change it (Lite → Pro etc). */}
+      {id && (user.role === 'brand' || user.role === 'creator') && <UserPlanCard userId={id} role={user.role} />}
 
       {id && <User360 userId={id} />}
 

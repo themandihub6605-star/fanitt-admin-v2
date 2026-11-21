@@ -22,7 +22,8 @@ import {
   X,
   CheckCircle2,
 } from '@/icons';
-import { adminUsersApi, type UserRow, type UserStats, type UserListParams } from '@/services/adminUsersApi';
+import { adminUsersApi, type UserRow, type UserStats, type UserListParams, type UserPlanSummary } from '@/services/adminUsersApi';
+import { adminApi, type AdminSubscriptionPlan } from '@/services/adminApi';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { PageHeader, Card, Badge, Button, EmptyState, StatCard, confirmDialog, exportCsv, promptDialog, type Column } from '@/components/AdminUI';
 import { Download } from '@/icons';
@@ -34,6 +35,8 @@ const USER_CSV: Column<UserRow>[] = [
   { key: 'role', header: 'Role', render: () => null, value: (u) => u.role },
   { key: 'signup', header: 'Sign-up method', render: () => null, value: (u) => u.authProvider ?? '' },
   { key: 'verified', header: 'Email verified', render: () => null, value: (u) => (u.isEmailVerified ? 'yes' : 'no') },
+  { key: 'plan', header: 'Plan', render: () => null, value: (u) => (u.plan ? `${u.plan.name} (${u.plan.billingCycle})` : '') },
+  { key: 'planEnd', header: 'Plan valid till', render: () => null, value: (u) => (u.plan?.currentPeriodEnd ? new Date(u.plan.currentPeriodEnd).toLocaleDateString('en-IN') : '') },
   { key: 'status', header: 'Status', render: () => null, value: (u) => (u.isSuspended ? 'suspended' : u.deletionStatus === 'pending' ? 'deletion requested' : 'active') },
   { key: 'joined', header: 'Joined', render: () => null, value: (u) => new Date(u.createdAt).toLocaleString('en-IN') },
   { key: 'last', header: 'Last login', render: () => null, value: (u) => (u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN') : '') },
@@ -68,6 +71,25 @@ const STATUS_BADGE: Record<string, { label: string; tone: 'gray' | 'amber' | 'em
   rejected: { label: 'Changes requested', tone: 'rose' },
 };
 
+/** Small plan badge for a brand/creator row. */
+function PlanCell({ plan }: { plan?: UserPlanSummary | null }) {
+  if (!plan) return <span className="text-gray-300 dark:text-white/25">—</span>;
+  const expired = plan.status !== 'active' || (plan.currentPeriodEnd && new Date(plan.currentPeriodEnd) < new Date());
+  return (
+    <div className="space-y-1">
+      <Badge tone={plan.isDefault ? 'gray' : expired ? 'rose' : 'orange'}>
+        {plan.name}
+        {!plan.isDefault && <span className="ml-1 font-normal opacity-70">· {plan.billingCycle === 'yearly' ? 'yr' : 'mo'}</span>}
+      </Badge>
+      {!plan.isDefault && plan.currentPeriodEnd && (
+        <span className="block text-[11px] text-gray-400 dark:text-white/40">
+          {expired ? 'Ended' : 'Till'} {new Date(plan.currentPeriodEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      )}
+    </div>
+  );
+}
+
 const selectClass =
   'rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-orange-400 dark:border-white/10 dark:bg-white/5 dark:text-white';
 
@@ -98,6 +120,8 @@ export default function AdminUsers() {
   const [role, setRole] = useState('');
   const [profile, setProfile] = useState<'' | NonNullable<UserListParams['profile']>>('');
   const [joined, setJoined] = useState<'' | NonNullable<UserListParams['joined']>>('');
+  const [planId, setPlanId] = useState('');
+  const [plans, setPlans] = useState<AdminSubscriptionPlan[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -121,6 +145,7 @@ export default function AdminUsers() {
         role: role || undefined,
         profile: profile || undefined,
         joined: joined || undefined,
+        planId: planId || undefined,
         page,
         limit: 25,
       })
@@ -135,12 +160,15 @@ export default function AdminUsers() {
   };
 
   useEffect(loadStats, []);
+  useEffect(() => {
+    adminApi.listSubscriptionPlans().then(setPlans).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(load, 300);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, role, profile, joined, page]);
+  }, [search, role, profile, joined, planId, page]);
 
   const resetPage = <T,>(setter: (v: T) => void) => (v: T) => {
     setter(v);
@@ -152,6 +180,7 @@ export default function AdminUsers() {
     setProfile(next.profile ?? '');
     setJoined(next.joined ?? '');
     setRole(next.role ?? '');
+    setPlanId('');
     setSearch('');
     setPage(1);
   };
@@ -300,6 +329,14 @@ export default function AdminUsers() {
             </option>
           ))}
         </select>
+        <select value={planId} onChange={(e) => resetPage(setPlanId)(e.target.value)} className={selectClass}>
+          <option value="">Any plan</option>
+          {plans.map((p) => (
+            <option key={p._id} value={p._id}>
+              {p.appliesTo === 'brand' ? 'Brand' : 'Creator'} · {p.name} ({p.billingCycle}){p.isActive ? '' : ' — retired'}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Bulk actions */}
@@ -380,6 +417,7 @@ export default function AdminUsers() {
                     <th className="px-4 py-3 font-semibold">User</th>
                     <th className="px-4 py-3 font-semibold">Phone</th>
                     <th className="px-4 py-3 font-semibold">Role</th>
+                    <th className="px-4 py-3 font-semibold">Plan</th>
                     <th className="px-4 py-3 font-semibold">Profile</th>
                     <th className="px-4 py-3 font-semibold">Joined · Active</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
@@ -439,6 +477,9 @@ export default function AdminUsers() {
                           )}
                         </td>
                         <td className="px-4 py-3 capitalize text-gray-600 dark:text-white/70">{u.role}</td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <PlanCell plan={u.plan} />
+                        </td>
                         <td className="min-w-[180px] px-4 py-3">
                           {ps && badge ? (
                             <div className="space-y-1.5">
